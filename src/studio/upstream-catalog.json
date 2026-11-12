@@ -1,0 +1,1596 @@
+{
+  "commit": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+  "repository": "https://github.com/OpenMontageInc/OpenMontage",
+  "license": "AGPL-3.0",
+  "pipelines": [
+    {
+      "name": "animated-explainer",
+      "version": "2.0",
+      "description": "Generated explainer video from topic/idea - fully AI-produced with narration, visuals, and music.",
+      "category": "generated",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "research",
+        "proposal",
+        "sample",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "video_analyzer",
+        "transcript_fetcher",
+        "video_downloader",
+        "scene_detect",
+        "frame_sampler",
+        "research_brief",
+        "proposal_packet",
+        "decision_log",
+        "script",
+        "scene_plan",
+        "asset_manifest",
+        "tts_selector",
+        "image_selector",
+        "video_selector",
+        "math_animate",
+        "diagram_gen",
+        "code_snippet",
+        "music_gen",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_stitch",
+        "hyperframes_compose",
+        "publish_log"
+      ],
+      "referenceSupported": true
+    },
+    {
+      "name": "animation",
+      "version": "2.0",
+      "description": "Animation-first pipeline for motion graphics, diagram-led explainers, kinetic typography,",
+      "category": "animation",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "research",
+        "proposal",
+        "sample",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "video_analyzer",
+        "transcript_fetcher",
+        "video_downloader",
+        "scene_detect",
+        "frame_sampler",
+        "research_brief",
+        "proposal_packet",
+        "decision_log",
+        "script",
+        "transcriber",
+        "scene_plan",
+        "asset_manifest",
+        "tts_selector",
+        "image_selector",
+        "video_selector",
+        "math_animate",
+        "diagram_gen",
+        "code_snippet",
+        "threejs_world",
+        "threejs_asset_catalog",
+        "atlas_3d",
+        "fal_3d",
+        "blender_world",
+        "music_gen",
+        "fal_elevenlabs_music",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_stitch",
+        "hyperframes_compose",
+        "publish_log"
+      ],
+      "referenceSupported": true
+    },
+    {
+      "name": "avatar-spokesperson",
+      "version": "2.0",
+      "description": "Presenter-led avatar pipeline for spokesperson videos, internal updates, onboarding,",
+      "category": "custom",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "brief",
+        "decision_log",
+        "script",
+        "transcriber",
+        "scene_plan",
+        "asset_manifest",
+        "heygen_avatar",
+        "talking_head",
+        "lip_sync",
+        "tts_selector",
+        "subtitle_gen",
+        "image_selector",
+        "audio_enhance",
+        "video_selector",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_stitch",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "character-animation",
+      "version": "0.1",
+      "description": "Character animation pipeline for local, reusable cartoon characters. It turns",
+      "category": "animation",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "research",
+        "proposal",
+        "sample",
+        "script",
+        "character_design",
+        "rig_plan",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "video_analyzer",
+        "transcript_fetcher",
+        "video_downloader",
+        "scene_detect",
+        "frame_sampler",
+        "research_brief",
+        "proposal_packet",
+        "decision_log",
+        "character_spec_generator",
+        "svg_rig_builder",
+        "pose_library_builder",
+        "action_timeline_compiler",
+        "character_rig_renderer",
+        "character_animation_reviewer",
+        "video_compose",
+        "video_analysis_brief",
+        "script",
+        "transcriber",
+        "character_design",
+        "image_selector",
+        "rig_plan",
+        "pose_library",
+        "scene_plan",
+        "asset_manifest",
+        "tts_selector",
+        "music_gen",
+        "edit_decisions",
+        "action_timeline",
+        "render_report",
+        "final_review",
+        "character_qa_report",
+        "audio_mixer",
+        "publish_log"
+      ],
+      "referenceSupported": true
+    },
+    {
+      "name": "cinematic",
+      "version": "2.0",
+      "description": "Mood-led cinematic pipeline for trailers, brand films, montages, explicit 3D-world fly-throughs,",
+      "category": "cinematic",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "research",
+        "proposal",
+        "sample",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "video_analyzer",
+        "transcript_fetcher",
+        "video_downloader",
+        "scene_detect",
+        "frame_sampler",
+        "research_brief",
+        "web_search",
+        "source_media_review",
+        "proposal_packet",
+        "decision_log",
+        "script",
+        "transcriber",
+        "scene_plan",
+        "brief",
+        "asset_manifest",
+        "subtitle_gen",
+        "audio_enhance",
+        "image_selector",
+        "video_selector",
+        "threejs_world",
+        "threejs_asset_catalog",
+        "atlas_3d",
+        "fal_3d",
+        "blender_world",
+        "pixabay_music",
+        "freesound_music",
+        "music_gen",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_stitch",
+        "video_trimmer",
+        "color_grade",
+        "bgm_montage_lite",
+        "hyperframes_compose",
+        "publish_log"
+      ],
+      "referenceSupported": true
+    },
+    {
+      "name": "clip-factory",
+      "version": "2.0",
+      "description": "Multi-clip extraction pipeline. Takes long-form content (webinar, stream, presentation,",
+      "category": "custom",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "source_media_review",
+        "brief",
+        "decision_log",
+        "script",
+        "transcriber",
+        "scene_detect",
+        "scene_plan",
+        "frame_sampler",
+        "asset_manifest",
+        "subtitle_gen",
+        "audio_enhance",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "video_trimmer",
+        "audio_mixer",
+        "color_grade",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "documentary-montage",
+      "version": "1.0",
+      "description": "Retrieval-first thematic montage pipeline. Builds a semantic corpus of real-world",
+      "category": "documentary",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose"
+      ],
+      "tools": [
+        "brief",
+        "scene_plan",
+        "asset_manifest",
+        "direct_clip_search",
+        "corpus_builder",
+        "clip_search",
+        "music_gen",
+        "edit_decisions",
+        "render_report",
+        "video_compose",
+        "audio_mixer",
+        "color_grade",
+        "video_trimmer",
+        "video_stitch"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "framework-smoke",
+      "version": "1.0",
+      "description": "Minimal pipeline manifest used to exercise the Phase 0 framework contracts.",
+      "category": "custom",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "research",
+        "script"
+      ],
+      "tools": [
+        "research_brief",
+        "script"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "hybrid",
+      "version": "2.0",
+      "description": "Hybrid pipeline for videos that combine source footage with designed or generated support",
+      "category": "hybrid",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "source_media_review",
+        "brief",
+        "decision_log",
+        "script",
+        "transcriber",
+        "scene_detect",
+        "audio_enhance",
+        "scene_plan",
+        "frame_sampler",
+        "asset_manifest",
+        "subtitle_gen",
+        "tts_selector",
+        "image_selector",
+        "video_selector",
+        "diagram_gen",
+        "code_snippet",
+        "music_gen",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_stitch",
+        "video_trimmer",
+        "color_grade",
+        "hyperframes_compose",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "localization-dub",
+      "version": "2.0",
+      "description": "Transcript-first localization pipeline for producing translated subtitles, dubbed audio,",
+      "category": "custom",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "brief",
+        "decision_log",
+        "source_media_review",
+        "script",
+        "transcriber",
+        "scene_plan",
+        "frame_sampler",
+        "scene_detect",
+        "asset_manifest",
+        "tts_selector",
+        "subtitle_gen",
+        "lip_sync",
+        "audio_enhance",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_trimmer",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "podcast-repurpose",
+      "version": "2.0",
+      "description": "Podcast-to-video repurposing pipeline. Takes podcast audio (or video podcast) and",
+      "category": "custom",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "source_media_review",
+        "brief",
+        "decision_log",
+        "script",
+        "transcriber",
+        "audio_enhance",
+        "scene_plan",
+        "frame_sampler",
+        "asset_manifest",
+        "subtitle_gen",
+        "image_selector",
+        "diagram_gen",
+        "music_gen",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_trimmer",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "screen-demo",
+      "version": "2.1",
+      "description": "Screen recording pipeline. Two production modes:",
+      "category": "screen_recording",
+      "stability": "production",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "real_capture",
+        "synthetic_terminal",
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "brief",
+        "decision_log",
+        "source_media_review",
+        "script",
+        "transcriber",
+        "scene_detect",
+        "audio_enhance",
+        "scene_plan",
+        "frame_sampler",
+        "asset_manifest",
+        "subtitle_gen",
+        "tts_selector",
+        "image_selector",
+        "diagram_gen",
+        "edit_decisions",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "audio_mixer",
+        "video_trimmer",
+        "hyperframes_compose",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    },
+    {
+      "name": "talking-head",
+      "version": "2.0",
+      "description": "End-to-end talking-head video pipeline. Takes raw footage of a person speaking,",
+      "category": "talking_head",
+      "stability": "beta",
+      "checkpointPolicy": "guided",
+      "stages": [
+        "idea",
+        "script",
+        "scene_plan",
+        "assets",
+        "edit",
+        "compose",
+        "publish"
+      ],
+      "tools": [
+        "brief",
+        "decision_log",
+        "source_media_review",
+        "script",
+        "transcriber",
+        "scene_plan",
+        "frame_sampler",
+        "face_tracker",
+        "silence_cutter",
+        "asset_manifest",
+        "image_selector",
+        "subtitle_gen",
+        "audio_mixer",
+        "edit_decisions",
+        "video_trimmer",
+        "render_report",
+        "final_review",
+        "video_compose",
+        "face_enhance",
+        "eye_enhance",
+        "color_grade",
+        "audio_enhance",
+        "auto_reframe",
+        "remotion_caption_burn",
+        "showcase_card",
+        "video_stitch",
+        "visual_qa",
+        "publish_log"
+      ],
+      "referenceSupported": false
+    }
+  ],
+  "profiles": [
+    {
+      "name": "youtube_landscape",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "name": "youtube_4k",
+      "width": 3840,
+      "height": 2160
+    },
+    {
+      "name": "youtube_shorts",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "instagram_reels",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "instagram_feed",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "name": "tiktok",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "linkedin",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "name": "cinematic",
+      "width": 2560,
+      "height": 1080
+    },
+    {
+      "name": "generic_hd",
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "providers": [
+    {
+      "tool": "archive_org",
+      "provider": "archive_org",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "atlas_3d",
+      "provider": "atlas_cloud",
+      "capability": "3d_asset_generation",
+      "local": false
+    },
+    {
+      "tool": "atlas_image",
+      "provider": "atlascloud",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "atlas_refresh_image",
+      "provider": "atlascloud",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "atlas_video",
+      "provider": "atlascloud",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "audio_energy",
+      "provider": "ffmpeg",
+      "capability": "analysis",
+      "local": true
+    },
+    {
+      "tool": "audio_enhance",
+      "provider": "ffmpeg",
+      "capability": "audio_processing",
+      "local": true
+    },
+    {
+      "tool": "audio_mixer",
+      "provider": "ffmpeg",
+      "capability": "audio_processing",
+      "local": true
+    },
+    {
+      "tool": "audio_probe",
+      "provider": "ffprobe",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "auto_reframe",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "azure_stt",
+      "provider": "azure",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "azure_tts",
+      "provider": "azure",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "bfl_image",
+      "provider": "bfl",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "bg_remove",
+      "provider": "rembg",
+      "capability": "enhancement",
+      "local": false
+    },
+    {
+      "tool": "bgm_montage_lite",
+      "provider": "bmts-lite",
+      "capability": "video_post",
+      "local": false
+    },
+    {
+      "tool": "blender_world",
+      "provider": "blender",
+      "capability": "3d_world_rendering",
+      "local": false
+    },
+    {
+      "tool": "bria_image",
+      "provider": "bria",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "cap_recorder",
+      "provider": "cap",
+      "capability": "screen_capture",
+      "local": false
+    },
+    {
+      "tool": "cartesia_tts",
+      "provider": "cartesia",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "character_spec_generator",
+      "provider": "openmontage",
+      "capability": "character_animation",
+      "local": false
+    },
+    {
+      "tool": "clip_search",
+      "provider": "openmontage",
+      "capability": "clip_retrieval",
+      "local": false
+    },
+    {
+      "tool": "code_snippet",
+      "provider": "pygments",
+      "capability": "graphics",
+      "local": false
+    },
+    {
+      "tool": "cogvideo_video",
+      "provider": "cogvideo",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "color_grade",
+      "provider": "ffmpeg",
+      "capability": "enhancement",
+      "local": true
+    },
+    {
+      "tool": "comfyui_image",
+      "provider": "comfyui",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "comfyui_music",
+      "provider": "comfyui",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "comfyui_video",
+      "provider": "comfyui",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "composition_validator",
+      "provider": "local",
+      "capability": "analysis",
+      "local": true
+    },
+    {
+      "tool": "corpus_builder",
+      "provider": "openmontage",
+      "capability": "corpus_population",
+      "local": false
+    },
+    {
+      "tool": "coverr",
+      "provider": "coverr",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "dareful",
+      "provider": "dareful",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "dashscope_asr",
+      "provider": "dashscope",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "dashscope_image",
+      "provider": "dashscope",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "dashscope_tts",
+      "provider": "dashscope",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "diagram_gen",
+      "provider": "mermaid",
+      "capability": "graphics",
+      "local": false
+    },
+    {
+      "tool": "direct_clip_search",
+      "provider": "openmontage",
+      "capability": "clip_acquisition",
+      "local": false
+    },
+    {
+      "tool": "doubao_tts",
+      "provider": "doubao",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "elevenlabs_soundtrack",
+      "provider": "elevenlabs",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "elevenlabs_tts",
+      "provider": "elevenlabs",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "esa",
+      "provider": "esa",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "export_bundle",
+      "provider": "local",
+      "capability": "publish",
+      "local": true
+    },
+    {
+      "tool": "eye_enhance",
+      "provider": "mediapipe",
+      "capability": "enhancement",
+      "local": false
+    },
+    {
+      "tool": "face_enhance",
+      "provider": "ffmpeg",
+      "capability": "enhancement",
+      "local": true
+    },
+    {
+      "tool": "face_restore",
+      "provider": "codeformer",
+      "capability": "enhancement",
+      "local": false
+    },
+    {
+      "tool": "face_tracker",
+      "provider": "mediapipe",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "fal_3d",
+      "provider": "fal",
+      "capability": "3d_asset_generation",
+      "local": false
+    },
+    {
+      "tool": "fal_elevenlabs_music",
+      "provider": "fal.ai",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "fal_elevenlabs_tts",
+      "provider": "fal.ai",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "fish_audio_tts",
+      "provider": "fish_audio",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "flux_image",
+      "provider": "flux",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "flux3_replicate_image",
+      "provider": "replicate",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "frame_sampler",
+      "provider": "ffmpeg",
+      "capability": "analysis",
+      "local": true
+    },
+    {
+      "tool": "freesound_music",
+      "provider": "freesound",
+      "capability": "music_search",
+      "local": false
+    },
+    {
+      "tool": "gemini_omni_fal",
+      "provider": "gemini_omni",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "gemini_omni_video",
+      "provider": "gemini_omni",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "gemini_replicate_image",
+      "provider": "replicate",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "gemini_tts",
+      "provider": "gemini",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "google_imagen",
+      "provider": "google_imagen",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "google_music",
+      "provider": "google",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "google_tts",
+      "provider": "google_tts",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "green_screen_composite",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "green_screen_processor",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "grok_image",
+      "provider": "grok",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "grok_tts",
+      "provider": "grok",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "grok_video",
+      "provider": "grok",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "heygen_avatar",
+      "provider": "heygen",
+      "capability": "avatar",
+      "local": false
+    },
+    {
+      "tool": "heygen_catalog_tts",
+      "provider": "heygen",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "heygen_tts",
+      "provider": "heygen",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "heygen_video",
+      "provider": "heygen",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "heygen_voice_convert",
+      "provider": "heygen",
+      "capability": "voice_conversion",
+      "local": false
+    },
+    {
+      "tool": "higgsfield_video",
+      "provider": "higgsfield",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "hunyuan_cloud_video",
+      "provider": "hunyuan_cloud",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "hunyuan_image",
+      "provider": "hunyuan_cloud",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "hunyuan_video",
+      "provider": "hunyuan",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "hyperframes_compose",
+      "provider": "hyperframes",
+      "capability": "video_post",
+      "local": false
+    },
+    {
+      "tool": "ideogram_image",
+      "provider": "ideogram",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "image_gen",
+      "provider": "multi",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "image_selector",
+      "provider": "selector",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "inworld_tts",
+      "provider": "inworld",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "jaxa",
+      "provider": "jaxa",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "jimeng_video",
+      "provider": "volcengine",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "kling_avatar",
+      "provider": "kling_official",
+      "capability": "avatar",
+      "local": false
+    },
+    {
+      "tool": "kling_lip_sync",
+      "provider": "kling_official",
+      "capability": "avatar",
+      "local": false
+    },
+    {
+      "tool": "kling_official_image",
+      "provider": "kling_official",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "kling_official_video",
+      "provider": "kling_official",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "kling_tts",
+      "provider": "kling_official",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "kling_video",
+      "provider": "kling",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "lip_sync",
+      "provider": "wav2lip",
+      "capability": "avatar",
+      "local": false
+    },
+    {
+      "tool": "loc",
+      "provider": "loc",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "local_diffusion",
+      "provider": "local_diffusion",
+      "capability": "image_generation",
+      "local": true
+    },
+    {
+      "tool": "ltx_api_video",
+      "provider": "ltx",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "ltx_video_local",
+      "provider": "ltx",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "ltx_video_modal",
+      "provider": "ltx-modal",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "mai_image",
+      "provider": "microsoft_mai",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "mai_tts",
+      "provider": "microsoft_mai",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "math_animate",
+      "provider": "manim",
+      "capability": "graphics",
+      "local": false
+    },
+    {
+      "tool": "minicut_music_fit",
+      "provider": "minicut",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "minicut_sfx",
+      "provider": "minicut",
+      "capability": "sound_effects",
+      "local": false
+    },
+    {
+      "tool": "minicut_upscale",
+      "provider": "minicut",
+      "capability": "enhancement",
+      "local": false
+    },
+    {
+      "tool": "minimax_fal_video",
+      "provider": "minimax",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "minimax_image",
+      "provider": "minimax",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "minimax_video",
+      "provider": "minimax",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "mistral_stt",
+      "provider": "mistral",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "mistral_tts",
+      "provider": "mistral",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "mixkit",
+      "provider": "envato",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "music_gen",
+      "provider": "elevenlabs",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "music_library",
+      "provider": "local",
+      "capability": "music_library",
+      "local": true
+    },
+    {
+      "tool": "nara",
+      "provider": "nara",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "nasa",
+      "provider": "nasa",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "noaa",
+      "provider": "noaa",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "openai_image",
+      "provider": "openai",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "openai_tts",
+      "provider": "openai",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "openverse",
+      "provider": "openverse",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "pexels",
+      "provider": "pexels",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "pexels_image",
+      "provider": "pexels",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "pexels_video",
+      "provider": "pexels",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "pika_video",
+      "provider": "pika",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "piper_tts",
+      "provider": "piper",
+      "capability": "tts",
+      "local": true
+    },
+    {
+      "tool": "pixabay_image",
+      "provider": "pixabay",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "pixabay_music",
+      "provider": "pixabay_music",
+      "capability": "music_search",
+      "local": false
+    },
+    {
+      "tool": "pixabay_video",
+      "provider": "pixabay",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "pixabay_video",
+      "provider": "pixabay",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "pond5_pd",
+      "provider": "pond5",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "qwen_image_21",
+      "provider": "qwen_local",
+      "capability": "image_generation",
+      "local": true
+    },
+    {
+      "tool": "realtime_audio",
+      "provider": "realtime_audio",
+      "capability": "realtime_audio",
+      "local": false
+    },
+    {
+      "tool": "recraft_image",
+      "provider": "recraft",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "remotion_caption_burn",
+      "provider": "remotion",
+      "capability": "subtitle",
+      "local": true
+    },
+    {
+      "tool": "runway_video",
+      "provider": "runway",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "scene_detect",
+      "provider": "ffmpeg",
+      "capability": "analysis",
+      "local": true
+    },
+    {
+      "tool": "screen_capture_selector",
+      "provider": "selector",
+      "capability": "screen_capture",
+      "local": false
+    },
+    {
+      "tool": "screen_recorder",
+      "provider": "ffmpeg",
+      "capability": "screen_capture",
+      "local": true
+    },
+    {
+      "tool": "seedance_ark",
+      "provider": "ark",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "seedance_replicate",
+      "provider": "seedance",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "seedance_video",
+      "provider": "seedance",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "seedream_image",
+      "provider": "bytedance",
+      "capability": "image_generation",
+      "local": false
+    },
+    {
+      "tool": "showcase_card",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "silence_cutter",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "sora_video",
+      "provider": "openai",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "subtitle_gen",
+      "provider": "openmontage",
+      "capability": "subtitle",
+      "local": false
+    },
+    {
+      "tool": "suno_music",
+      "provider": "suno",
+      "capability": "music_generation",
+      "local": false
+    },
+    {
+      "tool": "talking_head",
+      "provider": "sadtalker",
+      "capability": "avatar",
+      "local": false
+    },
+    {
+      "tool": "threejs_asset_catalog",
+      "provider": "multi",
+      "capability": "3d_asset_acquisition",
+      "local": false
+    },
+    {
+      "tool": "threejs_world",
+      "provider": "threejs",
+      "capability": "3d_world_generation",
+      "local": false
+    },
+    {
+      "tool": "transcriber",
+      "provider": "whisperx",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "transcript_fetcher",
+      "provider": "youtube-transcript-api",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "tts_selector",
+      "provider": "selector",
+      "capability": "tts",
+      "local": false
+    },
+    {
+      "tool": "unsplash",
+      "provider": "unsplash",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "upscale",
+      "provider": "realesrgan",
+      "capability": "enhancement",
+      "local": false
+    },
+    {
+      "tool": "veo_video",
+      "provider": "veo",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "video_analyzer",
+      "provider": "multi",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "video_compose",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "video_downloader",
+      "provider": "yt-dlp",
+      "capability": "source_ingest",
+      "local": false
+    },
+    {
+      "tool": "video_selector",
+      "provider": "selector",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "video_stitch",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "video_trimmer",
+      "provider": "ffmpeg",
+      "capability": "video_post",
+      "local": true
+    },
+    {
+      "tool": "video_understand",
+      "provider": "transformers",
+      "capability": "analysis",
+      "local": false
+    },
+    {
+      "tool": "videvo",
+      "provider": "videvo",
+      "capability": "unspecified",
+      "local": false
+    },
+    {
+      "tool": "visual_qa",
+      "provider": "ffmpeg",
+      "capability": "analysis",
+      "local": true
+    },
+    {
+      "tool": "wan_atlas_video",
+      "provider": "atlascloud",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "wan_replicate_video",
+      "provider": "replicate",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "wan_video",
+      "provider": "wan",
+      "capability": "video_generation",
+      "local": false
+    },
+    {
+      "tool": "wikimedia",
+      "provider": "wikimedia",
+      "capability": "unspecified",
+      "local": false
+    }
+  ]
+}

@@ -42,6 +42,9 @@ const schema = z.object({
     .string()
     .default("true")
     .transform((v) => v !== "false"),
+  OPENMONTAGE_ROOT: z.string().optional(),
+  STUDIO_ASSET_CAP: z.coerce.number().int().min(1).max(20000).default(5000),
+  STUDIO_SPEND_CAP_USD: z.coerce.number().min(0).default(0),
   RUN_WORKER_IN_WEB: z.string().optional(),
   FFMPEG_PATH: z.string().optional(),
   FFPROBE_PATH: z.string().optional(),
