@@ -34,6 +34,8 @@ RUN git init \
   && /opt/venv/bin/pip install -r /opt/openmontage/requirements.txt \
   && cd /opt/openmontage/remotion-composer && npm install \
   && npx remotion browser ensure \
+  && chmod -R a+rwX /opt/openmontage/remotion-composer/node_modules/.remotion \
+  && chmod a+rwX /opt/openmontage/remotion-composer/node_modules \
   && chown -R app:app /opt/openmontage /opt/venv
 WORKDIR /app
 COPY --from=appbase --chown=app:app /app/node_modules /app/node_modules

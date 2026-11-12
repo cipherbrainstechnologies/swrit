@@ -14,7 +14,7 @@ Do not add OpenMontage to the website image or the existing photo worker. Add on
 | Checkout | `OPENMONTAGE_ROOT=/opt/openmontage` |
 | Python | `OPENMONTAGE_PYTHON=/opt/venv/bin/python` |
 | Pin | `fecb9a1e3cc23ef84de30b272059457a427f16f8` |
-| Remotion browser | Pinned **chrome-headless-shell** baked in at image build (`npx remotion browser ensure`). Do **not** set `REMOTION_BROWSER_EXECUTABLE` or use distro `chromium`. |
+| Remotion browser | Pinned **chrome-headless-shell** baked at build (`npx remotion browser ensure`). The worker passes `--browser-executable` to that binary so Remotion never downloads at render time. Do **not** set `REMOTION_BROWSER_EXECUTABLE` or distro `chromium`. |
 
 Copy these from the existing worker, by reference where Railway allows it. Do not invent new secrets.
 

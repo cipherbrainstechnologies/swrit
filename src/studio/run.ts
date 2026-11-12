@@ -11,6 +11,21 @@ import { ffprobe, type Probe } from "@/server/media/ffmpeg";
 import type { Storage } from "@/server/storage";
 import { buildEditDecisions, buildProposal, type PlannedAsset } from "./plan";
 
+/** Pinned chrome-headless-shell from `npx remotion browser ensure` in Dockerfile.openmontage. */
+export function remotionHeadlessShellPath(openmontageRoot: string): string {
+  const arch = process.arch === "arm64" ? "linux-arm64" : "linux64";
+  return path.join(
+    openmontageRoot,
+    "remotion-composer",
+    "node_modules",
+    ".remotion",
+    "chrome-headless-shell",
+    arch,
+    `chrome-headless-shell-${arch}`,
+    "chrome-headless-shell",
+  );
+}
+
 async function setStage(db: DB, projectId: string, runId: string, stage: string) {
   await db.update(schema.studioProjects).set({ stage, updatedAt: new Date(), errorMessage: null }).where(eq(schema.studioProjects.id, projectId));
   await db.update(schema.studioPipelineRuns).set({ stage, updatedAt: new Date() }).where(eq(schema.studioPipelineRuns.id, runId));
@@ -140,6 +155,17 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
     });
     const output = path.join(work, "master.mp4");
     const jobFile = path.join(work, "job.json");
+    const remotionBrowser = remotionHeadlessShellPath(root);
+    try {
+      await fs.promises.access(remotionBrowser, fs.constants.X_OK);
+    } catch {
+      throw Object.assign(
+        new Error(
+          `Remotion headless shell is missing at ${remotionBrowser}. Rebuild and redeploy the openmontage worker image.`,
+        ),
+        { code: "remotion_browser_missing", retryable: false },
+      );
+    }
     await fs.promises.writeFile(
       jobFile,
       JSON.stringify({
@@ -151,6 +177,7 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         proposal_packet: proposal,
         scene_plan: scenes,
         audio_path: audioPath,
+        remotion_browser_executable: remotionBrowser,
       }),
     );
     if (signal.aborted) throw Object.assign(new Error("Cancelled"), { code: "cancelled", retryable: false });

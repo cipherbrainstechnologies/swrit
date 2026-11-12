@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findPipeline, findProfile, pipelineCatalog, suggestPipeline, upstreamCreativeSkills, videoRecipeOptions } from "../../src/studio/catalog";
+import { remotionHeadlessShellPath } from "../../src/studio/run";
 import { buildScenes, runtimeFor, type PlannedAsset } from "../../src/studio/plan";
 
 describe("openmontage catalog", () => {
@@ -13,6 +14,12 @@ describe("openmontage catalog", () => {
     expect(findPipeline("cinematic")?.sourceLed).toBe(true);
     expect(findProfile("instagram_reels")).toMatchObject({ width: 1080, height: 1920 });
     expect(findProfile("instagram_portrait")).toBeNull();
+  });
+
+  it("resolves the Remotion headless shell path under the OpenMontage root", () => {
+    const bin = remotionHeadlessShellPath("/opt/openmontage");
+    expect(bin).toContain("chrome-headless-shell");
+    expect(bin).toMatch(/linux64|linux-arm64/);
   });
 
   it("seeds OpenMontage video skills into recipe options", () => {
