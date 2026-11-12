@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@theme {
+  --color-midnight: #101a2b;
+  --color-midnight-2: #172338;
+  --color-midnight-3: #22314b;
+  --color-ivory: #f7f4ed;
+  --color-ivory-2: #efe9dc;
+  --color-gold: #ddbb78;
+  --color-gold-deep: #b8954f;
+  --color-slate: #6b7588;
+  --color-slate-light: #a7afbd;
+  --color-ink: #1b2333;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s,
+      transform 0.2s;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-gold {
+    background: var(--color-gold);
+    color: var(--color-midnight);
+  }
+  .btn-gold:hover {
+    background: #e6c98f;
+  }
+  .btn-dark {
+    background: var(--color-midnight);
+    color: var(--color-ivory);
+  }
+  .btn-dark:hover {
+    background: var(--color-midnight-3);
+  }
+  .btn-ghost {
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  }
+  .btn-ghost:hover {
+    border-color: currentColor;
+  }
+
+  .card {
+    background: #fffdf8;
+    border: 1px solid #e7e0d0;
+    border-radius: 1.25rem;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 0.75rem;
+    border: 1px solid #d9d1bf;
+    background: #fffdf8;
+    padding: 0.6rem 0.85rem;
+    color: var(--color-ink);
+  }
+  .field:focus {
+    border-color: var(--color-gold-deep);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 35%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .slow-zoom {
+    animation: slow-zoom 24s ease-in-out infinite alternate;
+  }
+  @keyframes slow-zoom {
+    from {
+      transform: scale(1.02);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
+  .fade-in {
+    animation: fade-in 0.9s ease both;
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

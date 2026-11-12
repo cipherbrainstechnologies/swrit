@@ -1,0 +1,13 @@
+# Optional: real PostgreSQL + S3-compatible storage for local development.
+# Without Docker, `pnpm dev` uses an embedded PGlite database and local file storage.
+services:
+  postgres:
+    image: postgres:16.4
+    environment:
+      POSTGRES_USER: dear
+      POSTGRES_PASSWORD: dear-local-only
+      POSTGRES_DB: dear_swritsinh
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+volumes:
+  pgdata: {}
