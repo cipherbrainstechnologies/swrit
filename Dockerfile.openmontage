@@ -1,0 +1,43 @@
+# OpenMontage studio worker. Separate from the website and from the photo worker.
+# Pinned upstream: https://github.com/OpenMontageInc/OpenMontage fecb9a1e3cc23ef84de30b272059457a427f16f8
+FROM node:22-bookworm-slim AS appbase
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN npm install -g pnpm@9.15.9
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM node:22-bookworm-slim
+ENV PNPM_HOME=/pnpm \
+    PATH=/opt/venv/bin:/pnpm:$PATH \
+    NODE_ENV=production \
+    FFMPEG_PATH=/usr/bin/ffmpeg \
+    FFPROBE_PATH=/usr/bin/ffprobe \
+    OPENMONTAGE_ROOT=/opt/openmontage \
+    OPENMONTAGE_PYTHON=/opt/venv/bin/python \
+    WORKER_JOB_TYPES=studio.render \
+    JOB_CONCURRENCY=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates ffmpeg fontconfig fonts-dejavu-core python3 python3-pip python3-venv git \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd -r app && useradd -r -g app -d /app app
+WORKDIR /opt/openmontage
+RUN git init \
+  && git remote add origin https://github.com/OpenMontageInc/OpenMontage.git \
+  && git fetch --depth 1 origin fecb9a1e3cc23ef84de30b272059457a427f16f8 \
+  && git checkout --detach FETCH_HEAD \
+  && python3 -m venv /opt/venv \
+  && /opt/venv/bin/pip install --upgrade pip \
+  && /opt/venv/bin/pip install -r /opt/openmontage/requirements.txt \
+  && cd /opt/openmontage/remotion-composer && npm install \
+  && chmod -R a+rX /opt/openmontage /opt/venv
+WORKDIR /app
+COPY --from=appbase --chown=app:app /app/node_modules /app/node_modules
+COPY --chown=app:app package.json pnpm-lock.yaml tsconfig.json ./
+COPY --chown=app:app src ./src
+COPY --chown=app:app scripts ./scripts
+COPY --chown=app:app drizzle ./drizzle
+COPY --chown=app:app assets ./assets
+COPY --chown=app:app services ./services
+USER app
+CMD ["node", "--import", "tsx", "src/worker/main.ts"]

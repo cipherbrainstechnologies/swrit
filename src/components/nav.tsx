@@ -10,6 +10,7 @@ const items = [
   { href: "/app/albums", label: "Albums" },
   { href: "/app/birthday/5", label: "5th Birthday" },
   { href: "/app/cinema", label: "Cinema" },
+  { href: "/app/ai-studio", label: "AI Studio" },
   { href: "/app/settings", label: "Settings" },
 ];
 

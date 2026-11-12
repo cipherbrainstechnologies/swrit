@@ -61,6 +61,16 @@ async function runJob(db: DB, storage: Storage, job: Job, signal: AbortSignal): 
       const { renderFilmJob } = await import("../film/render");
       return renderFilmJob(db, storage, job, signal);
     }
+    case "studio.render": {
+      if (!env().OPENMONTAGE_ROOT) throw new JobFailure("openmontage_missing", "This worker has no OpenMontage checkout.", false);
+      const { renderStudioJob } = await import("../studio/run");
+      try {
+        return await renderStudioJob(db, storage, String(job.payload.projectId), String(job.payload.exportId), signal);
+      } catch (err) {
+        const coded = err as { code?: string; message?: string; retryable?: boolean };
+        throw new JobFailure(coded.code || "compose_failed", coded.message || "OpenMontage render failed", coded.retryable === true);
+      }
+    }
     default:
       throw new JobFailure("unknown_job", `Unknown job type`, false);
   }
@@ -104,7 +114,19 @@ export function startWorker(opts: { concurrency?: number; pollMs?: number; name?
       let job: Job | null = null;
       try {
         // Only one heavy render at a time: slot 0 handles renders.
-        job = await claimNext(db, LEASE_SECONDS, slot === 0 ? undefined : ["media.process", "import.zip"]);
+        const configured = (process.env.WORKER_JOB_TYPES ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean) as Job["jobType"][];
+        const accepted = configured.length
+          ? configured
+          : (["media.process", "import.zip", "film.render"] as Job["jobType"][]);
+        const types = slot === 0 ? accepted : accepted.filter((type) => type === "media.process" || type === "import.zip");
+        if (!types.length) {
+          await sleep(pollMs, controller.signal);
+          continue;
+        }
+        job = await claimNext(db, LEASE_SECONDS, types);
       } catch (err) {
         log("error", "claim_failed", { err: String(err) });
       }

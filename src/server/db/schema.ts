@@ -417,7 +417,7 @@ export const jobs = pgTable(
   "jobs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    jobType: text("job_type", { enum: ["media.process", "import.zip", "film.render"] }).notNull(),
+    jobType: text("job_type", { enum: ["media.process", "import.zip", "film.render", "studio.render"] }).notNull(),
     filmId: uuid("film_id").references(() => birthdayFilms.id, { onDelete: "cascade" }),
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
     idempotencyKey: text("idempotency_key").unique(),
@@ -516,3 +516,177 @@ export const auditEvents = pgTable(
   },
   (t) => [index("audit_events_time_idx").on(t.timestamp)],
 );
+
+/**
+ * OpenMontage Studio. Projects point at private media; deleting a project or
+ * export never deletes those media rows.
+ */
+export const studioProjects = pgTable(
+  "studio_projects",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    prompt: text("prompt").notNull(),
+    pipeline: text("pipeline").notNull(),
+    profile: text("profile").notNull(),
+    stage: text("stage").notNull().default("AWAITING_APPROVAL"),
+    renderRuntime: text("render_runtime").notNull(),
+    rendererFamily: text("renderer_family").notNull(),
+    externalProcessing: boolean("external_processing").notNull().default(false),
+    referenceUrl: text("reference_url"),
+    musicMediaId: uuid("music_media_id"),
+    errorMessage: text("error_message"),
+    approvedAt: ts("approved_at"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("studio_projects_child_idx").on(t.childId, t.createdAt)],
+);
+
+export const studioProjectAssets = pgTable(
+  "studio_project_assets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => studioProjects.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "restrict" }),
+    position: integer("position").notNull(),
+    omitted: boolean("omitted").notNull().default(false),
+    caption: text("caption"),
+    durationSeconds: real("duration_seconds").notNull().default(4),
+    hero: boolean("hero").notNull().default(false),
+  },
+  (t) => [index("studio_project_assets_order_idx").on(t.projectId, t.position)],
+);
+
+export const studioProductionBriefs = pgTable("studio_production_briefs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  proposal: jsonb("proposal").$type<Record<string, unknown>>().notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioScenePlans = pgTable("studio_scene_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  plan: jsonb("plan").$type<Record<string, unknown>>().notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioApprovalGates = pgTable("studio_approval_gates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  stage: text("stage").notNull(),
+  decision: text("decision").notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioExports = pgTable("studio_exports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  profile: text("profile").notNull(),
+  status: text("status").notNull().default("queued"),
+  storageKey: text("storage_key"),
+  durationSeconds: real("duration_seconds"),
+  width: integer("width"),
+  height: integer("height"),
+  probe: jsonb("probe").$type<Record<string, unknown>>(),
+  errorMessage: text("error_message"),
+  createdAt: createdAt(),
+});
+
+export const studioSkills = pgTable(
+  "studio_skills",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    enabled: boolean("enabled").notNull().default(false),
+    activeVersionId: uuid("active_version_id"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("studio_skills_child_idx").on(t.childId)],
+);
+
+export const studioSkillVersions = pgTable("studio_skill_versions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  skillId: uuid("skill_id")
+    .notNull()
+    .references(() => studioSkills.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  status: text("status").notNull().default("draft"),
+  manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull(),
+  sourceName: text("source_name").notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioAudioAssets = pgTable("studio_audio_assets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  mediaId: uuid("media_id")
+    .notNull()
+    .references(() => media.id, { onDelete: "restrict" }),
+  role: text("role").notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioProviderSettings = pgTable("studio_provider_settings", {
+  childId: uuid("child_id")
+    .primaryKey()
+    .references(() => childProfiles.id, { onDelete: "cascade" }),
+  externalProcessing: boolean("external_processing").notNull().default(false),
+  spendCapUsd: real("spend_cap_usd").notNull().default(0),
+  updatedAt: updatedAt(),
+});
+
+export const studioCostRecords = pgTable("studio_cost_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  amountUsd: real("amount_usd").notNull().default(0),
+  note: text("note").notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioDecisionLogs = pgTable("studio_decision_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  summary: text("summary").notNull(),
+  createdAt: createdAt(),
+});
+
+export const studioPipelineRuns = pgTable("studio_pipeline_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => studioProjects.id, { onDelete: "cascade" }),
+  exportId: uuid("export_id").references(() => studioExports.id, { onDelete: "set null" }),
+  jobId: uuid("job_id"),
+  stage: text("stage").notNull(),
+  checkpoint: jsonb("checkpoint").$type<Record<string, unknown>>(),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
