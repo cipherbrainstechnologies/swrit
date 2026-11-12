@@ -25,6 +25,7 @@ export default async function ProductionPage({ params }: { params: Promise<{ pro
           proposal: data.proposal,
           assets: data.assets.map((asset) => ({
             id: asset.id,
+            mediaId: asset.mediaId,
             caption: asset.caption,
             durationSeconds: asset.durationSeconds,
             omitted: asset.omitted,

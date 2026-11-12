@@ -39,33 +39,33 @@ export function StudioExportPanel({ projectId, stage, exports: rows }: { project
   const label = STAGE_LABEL[stage] ?? stage.replaceAll("_", " ").toLowerCase();
 
   return (
-    <section className="card space-y-4 p-6" aria-label="Studio render progress" data-testid="studio-export-panel">
+    <section className="card space-y-4 p-4 sm:p-6" aria-label="Studio render progress" data-testid="studio-export-panel">
       <div>
-        <h2 className="font-display text-2xl">Your finished video</h2>
-        <p className="text-sm text-slate">
-          The MP4 is stored in your private bucket, tied to this production. Download or stream it here any time, or open it
-          from <span className="text-ink">AI Studio → My productions</span>.
+        <h2 className="font-display text-xl sm:text-2xl text-ink">{running ? "Rendering in progress" : ready.length ? "Your MP4 is ready" : "Finished video"}</h2>
+        <p className="mt-1 text-sm text-slate">
+          {running
+            ? "The worker is building your file. You can leave this page — progress updates automatically."
+            : ready.length
+              ? "Saved in your private bucket. Play or download below."
+              : "After approval, start rendering. The file will appear here when done."}
         </p>
       </div>
       {running || activeExport ? (
         <div className="space-y-2" role="status" aria-live="polite">
-          <p className="text-sm text-ink">
+          <p className="text-sm font-medium text-ink">
             {label}
-            {activeExport ? ` · ${activeExport.profile}` : ""}
+            {activeExport ? ` · ${activeExport.profile.replaceAll("_", " ")}` : ""}
             {running ? ` · ${pct}%` : ""}
           </p>
-          <div className="h-2 overflow-hidden rounded-full bg-ivory-2">
+          <div className="h-2.5 overflow-hidden rounded-full bg-ivory-2">
             <div className="h-full bg-gold transition-[width]" style={{ width: `${Math.max(4, pct)}%` }} />
           </div>
         </div>
       ) : null}
-      {ready.length === 0 && !running ? (
-        <p className="text-sm text-slate">No export yet. Approve the scene plan, then start rendering.</p>
-      ) : null}
       {ready.map((row) => (
         <div key={row.id} className="rounded-xl bg-ivory-2 p-4 text-sm" data-testid="studio-export-ready">
           <p className="text-ink">
-            <strong>Ready:</strong> {row.profile}
+            {row.profile.replaceAll("_", " ")}
             {row.width ? ` · ${row.width}×${row.height}` : ""}
             {row.durationSeconds ? ` · ${Math.round(row.durationSeconds)} s` : ""}
           </p>
@@ -73,7 +73,7 @@ export function StudioExportPanel({ projectId, stage, exports: rows }: { project
             <a className="btn btn-dark" href={`/api/studio/projects/${projectId}/playback?export=${row.id}&download=1`}>
               Download MP4
             </a>
-            <a className="btn btn-ghost" href={`/api/studio/projects/${projectId}/playback?export=${row.id}`}>
+            <a className="btn btn-gold" href={`/api/studio/projects/${projectId}/playback?export=${row.id}`}>
               Play
             </a>
           </div>
@@ -83,7 +83,7 @@ export function StudioExportPanel({ projectId, stage, exports: rows }: { project
         .filter((row) => row.status === "failed")
         .slice(0, 1)
         .map((row) => (
-          <p key={row.id} className="text-sm text-red-700">
+          <p key={row.id} className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
             Last export failed: {row.errorMessage}
           </p>
         ))}
