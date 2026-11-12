@@ -63,6 +63,14 @@ export function env(): Env {
     const fields = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
     throw new Error(`Invalid server configuration in: ${fields}`);
   }
+  if (
+    parsed.data.NODE_ENV === "production" &&
+    !process.env.DATABASE_URL &&
+    process.env.NEXT_PHASE !== "phase-production-build"
+  ) {
+    // Never silently fall back to the embedded dev database in production.
+    throw new Error("DATABASE_URL must be set in production");
+  }
   cached = parsed.data;
   return cached;
 }
