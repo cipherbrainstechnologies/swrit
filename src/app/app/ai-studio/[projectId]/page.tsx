@@ -11,7 +11,7 @@ export default async function ProductionPage({ params }: { params: Promise<{ pro
   const data = await getStudioProject(db, child.id, projectId);
   return (
     <div className="space-y-6 py-8">
-      <Link href="/app/ai-studio" className="text-sm text-gold">All productions</Link>
+      <Link href="/app/ai-studio" className="text-sm text-gold-deep hover:underline">← All productions</Link>
       <ProductionEditor
         initial={{
           id: data.project.id,

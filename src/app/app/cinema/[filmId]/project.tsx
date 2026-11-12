@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { RenderPanel } from "@/components/render-panel";
 
 type Shot = { mediaId: string; caption: string | null; duration: number; chapterKey: string };
 
@@ -13,6 +14,7 @@ export function CinemaProject({
   skippedUndated,
   hasRender,
   shots,
+  renderEnabled,
 }: {
   filmId: string;
   title: string;
@@ -21,8 +23,8 @@ export function CinemaProject({
   skippedUndated: number;
   hasRender: boolean;
   shots: Shot[];
+  renderEnabled: boolean;
 }) {
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState(shots);
 
@@ -37,41 +39,23 @@ export function CinemaProject({
     if (!res.ok) setError(data.message || "Could not save that shot.");
   }
 
-  async function render(resolution: "1080p" | "2160p") {
-    setError(null);
-    setMessage(null);
-    const res = await fetch(`/api/cinema/projects/${filmId}/render`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resolution, idempotencyKey: `${resolution}-${Date.now()}` }),
-    });
-    const data = await res.json();
-    if (!res.ok) setError(data.message || "Render was not queued.");
-    else setMessage(resolution === "1080p" ? "Preview queued." : "Final 4K render queued.");
-  }
-
   return (
     <div className="space-y-8">
       <header>
-        <Link href="/app/cinema" className="text-sm text-slate hover:underline">← Cinema</Link>
-        <h1 className="font-display mt-2 text-4xl sm:text-5xl">{title}</h1>
-        <p className="mt-2 text-sm text-slate">{phase || status}{skippedUndated ? ` · ${skippedUndated} undated pictures left out for review` : ""}</p>
+        <Link href="/app/cinema" className="text-sm text-gold-deep hover:underline">← Cinema</Link>
+        <h1 className="font-display mt-2 text-4xl sm:text-5xl text-ink">{title}</h1>
+        <p className="mt-2 text-sm text-slate">{phase || status}{skippedUndated ? ` · ${skippedUndated} undated pictures left out for review` : ""}{hasRender ? " · MP4 ready" : ""}</p>
       </header>
-      {message ? <p className="text-sm text-ivory">{message}</p> : null}
-      {error ? <p className="text-sm text-gold">{error}</p> : null}
-      <div className="flex flex-wrap gap-3">
-        <button className="btn btn-dark" type="button" onClick={() => void render("1080p")}>Generate preview</button>
-        <button className="btn btn-gold" type="button" onClick={() => void render("2160p")}>Approve final render</button>
-        {hasRender ? <Link className="btn btn-ghost" href={`/theatre/${filmId}`}>Play</Link> : null}
-      </div>
+      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      <RenderPanel filmId={filmId} enabled={renderEnabled} renderMode="cinema" />
       <ol className="space-y-3">
         {order.map((shot, index) => (
-          <li key={shot.mediaId} className="rounded-3xl border border-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-gold">{shot.chapterKey} · {shot.duration.toFixed(1)}s</p>
-            <label className="mt-2 block text-sm text-slate">
+          <li key={shot.mediaId} className="card p-4">
+            <p className="text-xs uppercase tracking-wide text-gold-deep">{shot.chapterKey} · {shot.duration.toFixed(1)}s</p>
+            <label className="mt-2 block text-sm font-medium text-ink">
               Caption
               <input
-                className="mt-1 w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-ivory"
+                className="field mt-1"
                 defaultValue={shot.caption ?? ""}
                 maxLength={200}
                 onBlur={(event) => void saveShot(shot, { caption: event.target.value })}

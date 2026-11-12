@@ -71,13 +71,15 @@ export function CinemaStudio({ skills, projects }: { skills: Skill[]; projects: 
     router.push(`/app/cinema/${data.projectId}`);
   }
 
+  const enabledSkills = skills.filter((skill) => skill.enabled);
+
   return (
     <div className="space-y-10">
-      {message ? <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-ivory">{message}</p> : null}
-      {error ? <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-gold">{error}</p> : null}
+      {message ? <p className="card border-gold/40 bg-ivory-2 px-4 py-3 text-sm text-ink">{message}</p> : null}
+      {error ? <p className="card border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p> : null}
 
-      <section className="space-y-4">
-        <h2 className="font-display text-3xl">Skills</h2>
+      <section className="card space-y-4 p-4 sm:p-6">
+        <h2 className="font-display text-3xl text-ink">Skills</h2>
         <p className="max-w-2xl text-sm text-slate">
           A skill is a description of the film, not a program. Uploaded files are checked and stored. They are not run. Approve a draft before it can be used.
         </p>
@@ -101,12 +103,12 @@ export function CinemaStudio({ skills, projects }: { skills: Skill[]; projects: 
         </div>
         <ul className="space-y-3">
           {skills.map((skill) => (
-            <li key={skill.id} className="rounded-3xl border border-white/10 p-4">
+            <li key={skill.id} className="rounded-2xl border border-ivory-2 bg-white/60 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-lg text-ivory">{skill.title}</h3>
+                  <h3 className="text-lg text-ink">{skill.title}</h3>
                   <p className="mt-1 max-w-xl text-sm text-slate">{skill.description}</p>
-                  <p className="mt-2 text-xs uppercase tracking-wide text-gold">{skill.enabled ? "On" : "Off"}</p>
+                  <p className="mt-2 text-xs uppercase tracking-wide text-gold-deep">{skill.enabled ? "On" : "Off"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button className="btn btn-ghost !min-h-9 text-xs" type="button" onClick={() => void act(skill.id, "approve")}>Approve</button>
@@ -125,37 +127,39 @@ export function CinemaStudio({ skills, projects }: { skills: Skill[]; projects: 
         </ul>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="font-display text-3xl">New film</h2>
+      <section className="card space-y-4 p-4 sm:p-6">
+        <h2 className="font-display text-3xl text-ink">New film</h2>
         <form className="grid gap-3 sm:grid-cols-3" action={(form) => void createProject(form)}>
-          <label className="text-sm text-slate">
+          <label className="text-sm font-medium text-ink">
             Skill
-            <select name="skillId" className="mt-1 w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-ivory" required>
-              {skills.filter((skill) => skill.enabled).map((skill) => (
+            <select name="skillId" className="field mt-1" required disabled={!enabledSkills.length}>
+              {enabledSkills.length === 0 ? <option value="">Turn on a skill first</option> : null}
+              {enabledSkills.map((skill) => (
                 <option key={skill.id} value={skill.id}>{skill.title}</option>
               ))}
             </select>
           </label>
-          <label className="text-sm text-slate">
+          <label className="text-sm font-medium text-ink">
             Length
-            <select name="minutes" className="mt-1 w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-ivory" defaultValue="5">
+            <select name="minutes" className="field mt-1" defaultValue="5">
               <option value="1">1 minute</option>
               <option value="3">3 minutes</option>
               <option value="5">5 minutes</option>
               <option value="10">10 minutes</option>
             </select>
           </label>
-          <button className="btn btn-gold self-end" type="submit">Plan film</button>
+          <button className="btn btn-gold self-end" type="submit" disabled={!enabledSkills.length}>Plan film</button>
         </form>
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-display text-3xl">Cinema library</h2>
+        <h2 className="font-display text-3xl text-ink">Cinema library</h2>
+        <p className="text-sm text-slate">Open a film to edit shots, watch render progress, and download the MP4 when it is ready.</p>
         <ul className="space-y-2">
           {projects.map((project) => (
             <li key={project.id}>
-              <Link className="block rounded-2xl border border-white/10 px-4 py-3 hover:bg-white/5" href={`/app/cinema/${project.id}`}>
-                <span className="text-ivory">{project.title}</span>
+              <Link className="card block px-4 py-3 transition hover:border-gold" href={`/app/cinema/${project.id}`}>
+                <span className="text-ink">{project.title}</span>
                 <span className="mt-1 block text-sm text-slate">{project.phase || project.status} · {Math.round(project.durationTargetSeconds / 60)} min{project.hasRender ? " · MP4 ready" : ""}</span>
               </Link>
             </li>

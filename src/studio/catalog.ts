@@ -90,6 +90,82 @@ export function productionTemplates() {
   return TEMPLATES.filter((template) => names.has(template.pipeline));
 }
 
+type CreativeSkillRecord = { slug: string; title: string; group: "creative" | "pipeline" };
+
+const SKILL_PROFILE: Record<string, string> = {
+  cinematic: "youtube_landscape",
+  hybrid: "youtube_landscape",
+  "clip-factory": "instagram_reels",
+  "talking-head": "youtube_landscape",
+  "screen-demo": "youtube_landscape",
+  "podcast-repurpose": "youtube_shorts",
+};
+
+const SKILL_PIPELINE: Record<string, string> = {
+  cinematic: "cinematic",
+  hybrid: "hybrid",
+  "clip-factory": "clip-factory",
+  "talking-head": "talking-head",
+  "screen-demo": "screen-demo",
+  "podcast-repurpose": "podcast-repurpose",
+  "short-form": "clip-factory",
+  "long-form": "hybrid",
+  "screen-recording": "screen-demo",
+  "animation": "hybrid",
+  "avatar-spokesperson": "talking-head",
+  "character-animation": "animated-explainer",
+  storytelling: "cinematic",
+  "commercial-product-video": "hybrid",
+  "ink-theater": "cinematic",
+  "animated-drawing": "cinematic",
+};
+
+export function upstreamCreativeSkills(): CreativeSkillRecord[] {
+  return ((catalog as { creativeSkills?: CreativeSkillRecord[] }).creativeSkills ?? []).map((skill) => ({
+    ...skill,
+    group: skill.group === "pipeline" ? "pipeline" : "creative",
+  }));
+}
+
+export type VideoRecipeOption =
+  | { id: string; kind: "template"; title: string; pipeline: string; profile: string; prompt: string }
+  | { id: string; kind: "skill"; title: string; pipeline: string; profile: string; prompt: string; skillSlug: string };
+
+/** Family recipes plus OpenMontage skills exported from the pinned checkout. */
+export function videoRecipeOptions(): VideoRecipeOption[] {
+  const names = new Set(catalog.pipelines.map((pipeline) => pipeline.name));
+  const byName = new Map(pipelineCatalog().map((pipeline) => [pipeline.name, pipeline]));
+  const templates: VideoRecipeOption[] = productionTemplates().map((template) => ({
+    id: `template:${template.id}`,
+    kind: "template",
+    title: template.title,
+    pipeline: template.pipeline,
+    profile: template.profile,
+    prompt: template.prompt,
+  }));
+
+  const skills: VideoRecipeOption[] = [];
+  for (const skill of upstreamCreativeSkills()) {
+    const pipeline =
+      (skill.group === "pipeline" && names.has(skill.slug) ? skill.slug : null) ?? SKILL_PIPELINE[skill.slug];
+    if (!pipeline || !names.has(pipeline)) continue;
+    const row = byName.get(pipeline);
+    if (!row?.sourceLed) continue;
+    const profile = SKILL_PROFILE[pipeline] ?? "youtube_landscape";
+    skills.push({
+      id: `skill:${skill.slug}`,
+      kind: "skill",
+      title: skill.title,
+      pipeline,
+      profile,
+      prompt: `Cut a film using the OpenMontage skill “${skill.title}”. ${row.description}`,
+      skillSlug: skill.slug,
+    });
+  }
+
+  return [...templates, ...skills.sort((a, b) => a.title.localeCompare(b.title))];
+}
+
 export function suggestPipeline(prompt: string): string {
   const text = prompt.toLowerCase();
   if (/\b(podcast)\b/.test(text)) return "podcast-repurpose";

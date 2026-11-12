@@ -13,7 +13,7 @@ export default async function CinemaPage() {
   return (
     <div className="space-y-6 py-8">
       <header>
-        <p className="text-sm uppercase tracking-[0.2em] text-gold">Cinema Studio</p>
+        <p className="eyebrow text-slate">Cinema Studio</p>
         <h1 className="font-display mt-2 text-4xl sm:text-5xl">Skills</h1>
         <p className="mt-2 max-w-2xl text-slate">
           Install a film style, choose the years you want, and render a private MP4. New styles are uploaded here. They do not need a new deploy.

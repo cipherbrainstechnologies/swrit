@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { requirePageOwner } from "@/server/access";
+import { env } from "@/server/env";
 import { filmData, getOwnedFilm } from "@/server/films";
 import { UUID_RE } from "@/server/http";
 import { CinemaProject } from "./project";
@@ -22,6 +23,7 @@ export default async function CinemaProjectPage({ params }: { params: Promise<{ 
         status={film.status}
         skippedUndated={data.plan.skippedUndated}
         hasRender={!!film.renderedStorageKey}
+        renderEnabled={env().ENABLE_VIDEO_RENDER}
         shots={data.plan.scenes.flatMap((scene) =>
           scene.type === "photo"
             ? [{ mediaId: scene.mediaId, caption: scene.caption, duration: scene.duration, chapterKey: scene.chapterKey }]

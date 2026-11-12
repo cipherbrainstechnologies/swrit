@@ -1592,5 +1592,162 @@
       "capability": "unspecified",
       "local": false
     }
+  ],
+  "creativeSkills": [
+    {
+      "slug": "3d-world-generation",
+      "title": "3D World Generation",
+      "group": "creative"
+    },
+    {
+      "slug": "animated-drawing",
+      "title": "Animated Drawing",
+      "group": "creative"
+    },
+    {
+      "slug": "animation-pipeline",
+      "title": "Animation & Motion Graphics Pipeline",
+      "group": "creative"
+    },
+    {
+      "slug": "broll-planning",
+      "title": "B",
+      "group": "creative"
+    },
+    {
+      "slug": "bg-remove-usage",
+      "title": "Background Removal Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "cinematic",
+      "title": "Cinematic Video Pipeline",
+      "group": "creative"
+    },
+    {
+      "slug": "commercial-product-video",
+      "title": "Commercial Product Video",
+      "group": "creative"
+    },
+    {
+      "slug": "data-visualization",
+      "title": "Data Visualization Strategy Skill",
+      "group": "creative"
+    },
+    {
+      "slug": "diagram-gen-usage",
+      "title": "Diagram Generation Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "enhancement-strategy",
+      "title": "Enhancement Strategy Skill",
+      "group": "creative"
+    },
+    {
+      "slug": "face-restore-usage",
+      "title": "Face Restoration Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "image-gen-usage",
+      "title": "Image Generation Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "image-provider-usage",
+      "title": "Image Provider Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "ink-theater",
+      "title": "Ink Theater",
+      "group": "creative"
+    },
+    {
+      "slug": "lip-sync-usage",
+      "title": "Lip Sync Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "long-form",
+      "title": "Long",
+      "group": "creative"
+    },
+    {
+      "slug": "manim-usage",
+      "title": "ManimCE Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "music-gen-usage",
+      "title": "Music Generation Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "scene-detect-usage",
+      "title": "Scene Detection Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "screen-recording",
+      "title": "Screen Recording Pipeline",
+      "group": "creative"
+    },
+    {
+      "slug": "short-form",
+      "title": "Short",
+      "group": "creative"
+    },
+    {
+      "slug": "sound-design",
+      "title": "Sound Design for Video Production",
+      "group": "creative"
+    },
+    {
+      "slug": "stock-sourcing-usage",
+      "title": "Stock Sourcing Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "storytelling",
+      "title": "Storytelling & Narrative Structure for Explainer Videos",
+      "group": "creative"
+    },
+    {
+      "slug": "talking-head-gen-usage",
+      "title": "Talking Head Generation Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "typography",
+      "title": "Typography for Video Production",
+      "group": "creative"
+    },
+    {
+      "slug": "upscale-usage",
+      "title": "Upscaling Usage for OpenMontage",
+      "group": "creative"
+    },
+    {
+      "slug": "video-editing",
+      "title": "Video Editing Skill",
+      "group": "creative"
+    },
+    {
+      "slug": "video-gen-prompting",
+      "title": "Video Generation Prompting",
+      "group": "creative"
+    },
+    {
+      "slug": "video-stitching",
+      "title": "Video Stitching Strategy Skill",
+      "group": "creative"
+    },
+    {
+      "slug": "video-understand-usage",
+      "title": "Video Understanding Usage for OpenMontage",
+      "group": "creative"
+    }
   ]
 }
