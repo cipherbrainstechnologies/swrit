@@ -1,7 +1,7 @@
 # Dear Swritsinh: web service (Next.js). Railway builds this from the repo root.
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+RUN npm install -g pnpm@9.15.9 && pnpm --version
 WORKDIR /app
 
 FROM base AS deps
@@ -9,6 +9,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
+ARG CSP_EXTRA_MEDIA_ORIGINS=""
+ENV CSP_EXTRA_MEDIA_ORIGINS=$CSP_EXTRA_MEDIA_ORIGINS
 COPY . .
 RUN pnpm build
 

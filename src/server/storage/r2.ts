@@ -24,6 +24,8 @@ export function createR2Storage(): Storage {
   const endpoint = e.R2_ENDPOINT ?? `https://${e.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
   const client = new S3Client({
     region: "auto",
+    // Path-style (endpoint/bucket/key) works with R2 and every S3-compatible store.
+    forcePathStyle: true,
     endpoint,
     credentials: { accessKeyId: e.R2_ACCESS_KEY_ID, secretAccessKey: e.R2_SECRET_ACCESS_KEY },
     // Browser PUTs to presigned URLs cannot add SDK checksum headers.

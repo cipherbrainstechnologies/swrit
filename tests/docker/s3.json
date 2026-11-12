@@ -1,0 +1,1 @@
+{"identities":[{"name":"test","credentials":[{"accessKey":"s3-test-user","secretKey":"s3-test-password"}],"actions":["Admin","Read","Write","List","Tagging"]}]}

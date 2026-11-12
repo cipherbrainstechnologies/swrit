@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
-const BASE = `http://localhost:${PORT}`;
+// E2E_BASE_URL runs the suite against an already-running deployment (e.g. the Docker stack).
+const EXTERNAL = process.env.E2E_BASE_URL;
+const BASE = EXTERNAL ?? `http://localhost:${PORT}`;
 
 /**
  * End-to-end tests run against the production build (`pnpm build` first) with an
@@ -34,15 +36,15 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
     },
   ],
-  webServer: {
-    command: `node tests/e2e/start-server.mjs`,
-    url: `${BASE}/api/health`,
-    timeout: 180_000,
-    reuseExistingServer: false,
-    stdout: "ignore",
-    stderr: "pipe",
-    env: {
-      E2E_PORT: String(PORT),
-    },
-  },
+  webServer: EXTERNAL
+    ? undefined
+    : {
+        command: `node tests/e2e/start-server.mjs`,
+        url: `${BASE}/api/health`,
+        timeout: 180_000,
+        reuseExistingServer: false,
+        stdout: "ignore",
+        stderr: "pipe",
+        env: { E2E_PORT: String(PORT) },
+      },
 });

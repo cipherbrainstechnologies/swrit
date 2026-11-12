@@ -1,13 +1,11 @@
 import type { NextConfig } from "next";
 
 const dev = process.env.NODE_ENV !== "production";
-const r2Origin = process.env.R2_ENDPOINT
-  ? new URL(process.env.R2_ENDPOINT).origin
-  : process.env.R2_ACCOUNT_ID
-    ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
-    : "";
-// Presigned URLs may use the bucket-subdomain form.
-const r2Sources = r2Origin ? `${r2Origin} https://*.r2.cloudflarestorage.com` : "";
+// Headers are fixed at build time, and Railway does not expose service variables to the
+// Docker build, so R2 is always allowed by wildcard. CSP_EXTRA_MEDIA_ORIGINS (build arg)
+// adds other S3-compatible origins, e.g. MinIO in local Docker tests.
+const extra = (process.env.CSP_EXTRA_MEDIA_ORIGINS ?? "").split(/[\s,]+/).filter(Boolean).join(" ");
+const r2Sources = `https://*.r2.cloudflarestorage.com${extra ? ` ${extra}` : ""}`;
 
 const csp = [
   "default-src 'self'",

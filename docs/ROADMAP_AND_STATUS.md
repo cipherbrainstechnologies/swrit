@@ -10,7 +10,7 @@ Last updated: 12 November 2026. "Verified" means covered by an automated test or
 | Persistent login rate limit, generic errors, CSRF origin check | Done | unit: 429 after repeated failures, rows in `rate_limit`; cross-site POST → 403 |
 | Server-side authorisation on every page/API, no IDOR | Done | unit: other family's media → 404 on GET/PATCH/access |
 | Sign out, sign out everywhere, change password | Done | e2e: sign-out locks APIs |
-| Private R2 storage with presigned PUT/GET, random keys | Done (code) | local driver verified end-to-end; **R2 not yet exercised against a real bucket** |
+| Private R2 storage with presigned PUT/GET, random keys | Done | S3 driver verified end-to-end against SeaweedFS (S3-compatible) in Docker: signed GET ok, unsigned GET 403; **real Cloudflare R2 not yet tested** |
 | Phone multi-select upload, progress, cancel, retry, duplicate Skip/Keep both | Done | e2e: 5 mixed photos, duplicate prompt |
 | Large videos: multipart (16 MB parts, retries, abort/cleanup of stale sessions) | Done | code path shared with local driver; cross-reload resume **not** implemented (documented) |
 | Magic-byte validation, originals byte-for-byte | Done | unit: disguised HTML rejected; stored bytes equal uploaded bytes |
@@ -23,7 +23,7 @@ Last updated: 12 November 2026. "Verified" means covered by an automated test or
 | Birthday Theatre: fullscreen slideshow, banners, captions, controls, music (instrumental + labelled HB melody), uploaded song | Done | e2e: opening → photos (blob images) → closing banner; no failed requests |
 | Play existing family MP4 behind login | Done | e2e: authenticated playback 200, `video/mp4` |
 | Heirloom export with SHA-256 manifest | Done | run locally; `sha256sum -c` all OK |
-| Dockerfiles + Railway config + deploy guide | Written | **Docker images not built here (Docker daemon not running); not deployed** |
+| Dockerfiles + Railway config + deploy guide | Done | both images built; all 14 e2e tests pass on Docker web + worker + Postgres 16 + S3 storage (`tests/docker`); **not deployed to Railway** |
 
 ## P1: Film studio
 

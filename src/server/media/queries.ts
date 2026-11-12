@@ -191,7 +191,7 @@ export async function neighbours(db: DB, childId: string, m: MediaRow) {
       and(
         base,
         gte(schema.media.capturedAt, m.capturedAt),
-        sql`(${schema.media.capturedAt}, ${schema.media.id}) > (${m.capturedAt}, ${m.id})`,
+        sql`(${schema.media.capturedAt}, ${schema.media.id}) > (${m.capturedAt.toISOString()}::timestamptz, ${m.id}::uuid)`,
       ),
     )
     .orderBy(asc(schema.media.capturedAt), asc(schema.media.id))
