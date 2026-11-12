@@ -326,11 +326,66 @@ export const birthdayFilms = pgTable(
     audioMediaId: uuid("audio_media_id").references(() => media.id, { onDelete: "set null" }),
     /** Parent confirmation that the uploaded song is theirs to use / properly licensed. */
     audioRightsConfirmed: boolean("audio_rights_confirmed").notNull().default(false),
+    /** Approved cinema skill version used to plan this film. Null for the built-in birthday draft. */
+    skillVersionId: uuid("skill_version_id"),
+    /** Cinema job phase: QUEUED, PLANNING, PREPARING, RENDERING, UPLOADING, COMPLETED, FAILED, CANCELLED. */
+    cinemaPhase: text("cinema_phase"),
     verifiedAt: ts("verified_at"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [index("birthday_films_child_idx").on(t.childId, t.birthdayYear)],
+);
+
+export const cinemaSkills = pgTable(
+  "cinema_skills",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    enabled: boolean("enabled").notNull().default(false),
+    activeVersionId: uuid("active_version_id"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("cinema_skills_child_slug").on(t.childId, t.slug)],
+);
+
+export const cinemaSkillVersions = pgTable(
+  "cinema_skill_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    skillId: uuid("skill_id")
+      .notNull()
+      .references(() => cinemaSkills.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    status: text("status", { enum: ["draft", "approved", "retired"] }).notNull().default("draft"),
+    manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull(),
+    sourceName: text("source_name").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("cinema_skill_versions_skill_version").on(t.skillId, t.version)],
+);
+
+/** Private soundtrack roles. The bytes live in `media`; this row only names the role. */
+export const cinemaAudioAssets = pgTable(
+  "cinema_audio_assets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("cinema_audio_child_role").on(t.childId, t.role)],
 );
 
 export const filmScenes = pgTable(

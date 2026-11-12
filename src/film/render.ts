@@ -2,7 +2,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { schema, type DB } from "../server/db";
 import { filmData } from "../server/films";
@@ -190,15 +190,17 @@ async function encodeClip(
   out: string,
   signal?: AbortSignal,
   heavy = false,
+  grade?: "warm-natural" | "none",
 ) {
   const frames = Math.max(1, Math.round(seconds * FPS));
   const fadeOut = Math.max(0, frames / FPS - FADE);
+  const warm = grade === "warm-natural" ? "eq=gamma=1.02:saturation=1.04:gamma_r=1.02:gamma_b=0.97," : "";
   const chain: string[] = [];
   if (motion === "none") {
-    chain.push(`[0:v]scale=${size.W}:${size.H},setsar=1,fps=${FPS}[base]`);
+    chain.push(`[0:v]${warm}scale=${size.W}:${size.H},setsar=1,fps=${FPS}[base]`);
   } else {
     const e = zoomExpr(motion, frames, 0.06);
-    chain.push(`[0:v]zoompan=z='${e.z}':x='${e.x}':y='${e.y}':d=${frames}:s=${size.W}x${size.H}:fps=${FPS},setsar=1[base]`);
+    chain.push(`[0:v]${warm}zoompan=z='${e.z}':x='${e.x}':y='${e.y}':d=${frames}:s=${size.W}x${size.H}:fps=${FPS},setsar=1[base]`);
   }
   if (overlay) chain.push(`[base][1:v]overlay=0:0:format=auto[ov]`);
   const last = overlay ? "[ov]" : "[base]";
@@ -365,7 +367,7 @@ export async function renderPlanToFile(opts: {
         overlay = path.join(dir, `o${i}.png`);
         await captionOverlay(s.caption, size, overlay);
       }
-      await encodeClip(frame, overlay, s.duration, size, s.motion, clip, signal, heavy);
+      await encodeClip(frame, overlay, s.duration, size, s.motion, clip, signal, heavy, plan.colorGrade);
     }
     await fsp.rm(frame, { force: true });
     clips.push(clip);
@@ -405,6 +407,24 @@ export async function renderFilmJob(db: DB, storage: Storage, job: Job, signal: 
   const film = (await db.select().from(schema.birthdayFilms).where(eq(schema.birthdayFilms.id, filmId)).limit(1))[0];
   if (!film) throw new Error("Film not found");
   const child = (await db.select().from(schema.childProfiles).where(eq(schema.childProfiles.id, film.childId)).limit(1))[0];
+  if (film.skillVersionId) {
+    const version = (await db.select().from(schema.cinemaSkillVersions).where(eq(schema.cinemaSkillVersions.id, film.skillVersionId)).limit(1))[0];
+    const manifest = version?.manifest as { audio?: { finale?: { required?: boolean; role?: string } } } | undefined;
+    if (manifest?.audio?.finale?.required) {
+      const role = manifest.audio.finale.role ?? "happy_birthday_vocal_standard";
+      const asset = (
+        await db
+          .select()
+          .from(schema.cinemaAudioAssets)
+          .where(and(eq(schema.cinemaAudioAssets.childId, child.id), eq(schema.cinemaAudioAssets.role, role)))
+          .limit(1)
+      )[0];
+      if (!asset || film.audioMediaId !== asset.mediaId || !film.audioRightsConfirmed) {
+        throw new Error(`Missing required audio asset: ${role}`);
+      }
+    }
+    await db.update(schema.birthdayFilms).set({ cinemaPhase: "RENDERING", status: "rendering" }).where(eq(schema.birthdayFilms.id, film.id));
+  }
   const data = await filmData(db, child, film);
   if (data.plan.photoCount === 0) throw new Error("The film has no dated photos yet. Upload photos and confirm their dates first.");
 
@@ -412,6 +432,13 @@ export async function renderFilmJob(db: DB, storage: Storage, job: Job, signal: 
     const photo = async (mediaId: string, dest: string) => {
       const m = (await db.select().from(schema.media).where(eq(schema.media.id, mediaId)).limit(1))[0];
       if (!m || m.childId !== child.id) return false;
+      if (m.kind === "video") {
+        const tmp = `${dest}.video`;
+        await download(storage, m.storageKey, tmp);
+        await run(ffmpegPath(), ["-y", "-ss", "0.5", "-i", tmp, "-frames:v", "1", dest], { timeoutMs: 60_000 });
+        await fsp.rm(tmp, { force: true });
+        return true;
+      }
       // 4K uses the original for maximum detail; 1080p uses the 2560px derivative.
       const v = (resolution === "2160p" && m.mimeDetected && ["image/jpeg", "image/png", "image/webp"].includes(m.mimeDetected)
         ? { key: m.storageKey }
@@ -447,7 +474,14 @@ export async function renderFilmJob(db: DB, storage: Storage, job: Job, signal: 
     const previous = film.renderedStorageKey;
     await db
       .update(schema.birthdayFilms)
-      .set({ renderedStorageKey: key, renderedMeta: meta, verifiedAt: new Date(), status: "ready", updatedAt: new Date() })
+      .set({
+        renderedStorageKey: key,
+        renderedMeta: { ...meta, skillVersionId: film.skillVersionId ?? null },
+        verifiedAt: new Date(),
+        status: "ready",
+        cinemaPhase: film.skillVersionId ? "COMPLETED" : film.cinemaPhase,
+        updatedAt: new Date(),
+      })
       .where(eq(schema.birthdayFilms.id, film.id));
     if (previous && previous !== key) await storage.delete(previous).catch(() => {});
     return key;

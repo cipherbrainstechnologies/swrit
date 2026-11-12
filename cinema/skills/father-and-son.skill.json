@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "father-and-son-five-minutes",
+  "title": "Father and Son",
+  "description": "A five-minute film made only from photographs and videos already in the private library. Chapters follow age, captions use words the owner wrote, and the ending waits for a Happy Birthday vocal the owner supplies.",
+  "targetSeconds": 300,
+  "preferredResolution": "2160p",
+  "previewResolution": "1080p",
+  "fps": 24,
+  "aspect": "16:9",
+  "color": { "grade": "warm-natural" },
+  "opening": {
+    "lines": ["A FATHER AND HIS SON", "Five minutes from these years", "Only what you kept."],
+    "seconds": 8
+  },
+  "closing": {
+    "lines": ["HAPPY BIRTHDAY", "The years in these pictures", "With love, from Dad."],
+    "seconds": 18
+  },
+  "chapters": [
+    { "key": "beginning", "title": "The beginning", "subtitle": "His first year", "fromMonths": 0, "toMonths": 12 },
+    { "key": "beside", "title": "Beside you", "subtitle": "One and two", "fromMonths": 12, "toMonths": 30 },
+    { "key": "growing", "title": "Growing", "subtitle": "Two and three", "fromMonths": 30, "toMonths": 48 },
+    { "key": "nearly", "title": "Nearly five", "subtitle": "Four, until this birthday", "fromMonths": 48, "toMonths": 120 }
+  ],
+  "shots": {
+    "minSeconds": 3.2,
+    "baseSeconds": 4.2,
+    "heroSeconds": 6.5,
+    "transition": "crossfade",
+    "motion": ["in", "out", "left", "right"]
+  },
+  "audio": {
+    "instrumental": { "required": false },
+    "finale": { "role": "happy_birthday_vocal_standard", "required": true, "align": "end" }
+  },
+  "selection": {
+    "includeUndated": false,
+    "flagUndatedForReview": true,
+    "preferFavorites": true,
+    "deduplicate": true,
+    "curated": true,
+    "includeVideoStills": true
+  },
+  "captions": { "source": "owner-written-only", "allowAi": false }
+}
