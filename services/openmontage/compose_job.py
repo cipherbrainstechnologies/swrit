@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -17,20 +18,22 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001 — surface the import failure to the worker
         print(json.dumps({"success": False, "error": f"OpenMontage import failed: {exc}"}))
         return 1
+    browser_executable = job.get("remotion_browser_executable") or os.environ.get("REMOTION_BROWSER_EXECUTABLE")
+    payload: dict = {
+        "operation": "render",
+        "edit_decisions": job["edit_decisions"],
+        "asset_manifest": job["asset_manifest"],
+        "proposal_packet": job["proposal_packet"],
+        "scene_plan": job.get("scene_plan") or [],
+        "output_path": job["output_path"],
+        "profile": job.get("profile"),
+        "audio_path": job.get("audio_path"),
+        "options": {"subtitle_burn": False},
+    }
+    if browser_executable:
+        payload["remotion_browser_executable"] = str(browser_executable)
     tool = VideoCompose()
-    result = tool.execute(
-        {
-            "operation": "render",
-            "edit_decisions": job["edit_decisions"],
-            "asset_manifest": job["asset_manifest"],
-            "proposal_packet": job["proposal_packet"],
-            "scene_plan": job.get("scene_plan") or [],
-            "output_path": job["output_path"],
-            "profile": job.get("profile"),
-            "audio_path": job.get("audio_path"),
-            "options": {"subtitle_burn": False},
-        }
-    )
+    result = tool.execute(payload)
     data = getattr(result, "data", None)
     print(json.dumps({"success": bool(result.success), "error": result.error, "data": data}, default=str))
     output = Path(job["output_path"])
