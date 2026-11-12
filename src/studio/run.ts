@@ -140,6 +140,7 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
     });
     const output = path.join(work, "master.mp4");
     const jobFile = path.join(work, "job.json");
+    const remotionBrowser = process.env.REMOTION_BROWSER_EXECUTABLE?.trim();
     await fs.promises.writeFile(
       jobFile,
       JSON.stringify({
@@ -151,6 +152,7 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         proposal_packet: proposal,
         scene_plan: scenes,
         audio_path: audioPath,
+        ...(remotionBrowser ? { remotion_browser_executable: remotionBrowser } : {}),
       }),
     );
     if (signal.aborted) throw Object.assign(new Error("Cancelled"), { code: "cancelled", retryable: false });
