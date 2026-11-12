@@ -65,6 +65,15 @@ export type FilmPlan = {
   finaleStartSeconds: number;
   photoCount: number;
   skippedUndated: number;
+  colorGrade?: "warm-natural" | "none";
+};
+
+export type SkillChapter = {
+  key: string;
+  title: string;
+  subtitle: string;
+  fromMonths: number;
+  toMonths: number;
 };
 
 export type PlanOptions = {
@@ -76,9 +85,18 @@ export type PlanOptions = {
   songSeconds?: number;
   openingLines?: string[];
   closingLines?: string[];
+  openingSeconds?: number;
+  closingSeconds?: number;
   coverMediaId?: string | null;
   /** When true, use `order` instead of chronological sampling (studio edits). */
   manualOrder?: boolean;
+  /** Age-band chapters from an approved cinema skill. Omitted chapters keep the built-in birthday film. */
+  chapters?: SkillChapter[];
+  /** Drop media already marked duplicate. Originals stay in the library. */
+  excludeDuplicates?: boolean;
+  /** Hold a frame from eligible videos in the same cut as photographs. */
+  includeVideos?: boolean;
+  colorGrade?: "warm-natural" | "none";
 };
 
 const OPENING_SECONDS = 9;
@@ -94,6 +112,11 @@ export function chapterKeyFor(months: number): string {
   return "explorer";
 }
 
+function chapterKeyFromSkill(chapters: SkillChapter[], months: number): string {
+  const hit = chapters.find((c) => c.key !== "family" && months >= c.fromMonths && months < c.toMonths);
+  return hit?.key ?? chapters.find((c) => c.key !== "family")?.key ?? chapters[0].key;
+}
+
 function evenlySample<T>(items: T[], n: number): T[] {
   if (n >= items.length) return items;
   if (n <= 0) return [];
@@ -107,7 +130,11 @@ export function buildFilmPlan(all: PlanMedia[], o: PlanOptions): FilmPlan {
   const target = o.targetSeconds ?? 180;
   const song = Math.max(8, Math.min(90, o.songSeconds ?? 24));
   const usable = all.filter(
-    (m) => m.kind === "image" && !m.omitted && (m.status === "ready" || m.status === "duplicate"),
+    (m) =>
+      (m.kind === "image" || (o.includeVideos && m.kind === "video")) &&
+      !m.omitted &&
+      (m.status === "ready" || m.status === "duplicate") &&
+      !(o.excludeDuplicates && m.status === "duplicate"),
   );
   const dated = usable.filter((m) => m.capturedAt && (!m.dateNeedsReview || m.pinned));
   const skippedUndated = usable.length - dated.length;
@@ -118,16 +145,34 @@ export function buildFilmPlan(all: PlanMedia[], o: PlanOptions): FilmPlan {
     .sort((a, b) => a.t.getTime() - b.t.getTime());
 
   // Group by chapter (age band). Parent-marked family photos form their own chapter.
+  const chapterDefs: SkillChapter[] = o.chapters?.length
+    ? o.chapters
+    : [
+        { key: "beginning", title: "The Beginning", subtitle: "His first year", fromMonths: 0, toMonths: 12 },
+        { key: "wonders", title: "Little Moments, Big Wonders", subtitle: "One and two", fromMonths: 12, toMonths: 30 },
+        { key: "family", title: "Family & Love", subtitle: "The people who love him", fromMonths: 0, toMonths: 0 },
+        { key: "growing", title: "Growing Up", subtitle: "Two and three", fromMonths: 30, toMonths: 48 },
+        { key: "explorer", title: "Our Little Explorer", subtitle: "Four, nearly five", fromMonths: 48, toMonths: 1200 },
+      ];
   const groups = new Map<string, { m: PlanMedia; t: Date }[]>();
-  for (const c of CHAPTERS) groups.set(c.key, []);
+  for (const c of chapterDefs) groups.set(c.key, []);
+  const hasFamily = chapterDefs.some((c) => c.key === "family");
   for (const item of withTime) {
-    const key = item.m.family ? "family" : chapterKeyFor(ageInMonths(o.birthDate, item.t, o.timeZone));
-    groups.get(key)!.push(item);
+    const key =
+      item.m.family && hasFamily
+        ? "family"
+        : o.chapters?.length
+          ? chapterKeyFromSkill(chapterDefs, ageInMonths(o.birthDate, item.t, o.timeZone))
+          : chapterKeyFor(ageInMonths(o.birthDate, item.t, o.timeZone));
+    (groups.get(key) ?? groups.get(chapterDefs[0].key)!).push(item);
   }
-  const activeChapters = CHAPTERS.filter((c) => groups.get(c.key)!.length > 0);
+  const activeChapters = chapterDefs
+    .filter((c) => (groups.get(c.key)?.length ?? 0) > 0)
+    .map((c) => ({ key: c.key, title: c.title, subtitle: c.subtitle }));
 
-  const closingSeconds = Math.max(12, Math.min(song, 30));
-  const fixed = OPENING_SECONDS + closingSeconds + activeChapters.length * CHAPTER_SECONDS;
+  const openingSeconds = o.openingSeconds ?? OPENING_SECONDS;
+  const closingSeconds = o.closingSeconds ?? Math.max(12, Math.min(song, 30));
+  const fixed = openingSeconds + closingSeconds + activeChapters.length * CHAPTER_SECONDS;
   const photoBudget = Math.max(0, target - fixed);
   const maxPhotos = Math.max(activeChapters.length, Math.floor(photoBudget / BASE_PHOTO));
   const totalAvailable = withTime.length;
@@ -160,7 +205,7 @@ export function buildFilmPlan(all: PlanMedia[], o: PlanOptions): FilmPlan {
     scenes.push({ ...s, start: Number(t.toFixed(3)) } as Scene);
     t += s.duration;
   };
-  push({ type: "opening", duration: OPENING_SECONDS, lines: o.openingLines ?? OPENING_LINES, coverMediaId: o.coverMediaId ?? null });
+  push({ type: "opening", duration: openingSeconds, lines: o.openingLines ?? OPENING_LINES, coverMediaId: o.coverMediaId ?? null });
   const motions = ["in", "out", "left", "right"] as const;
   let k = 0;
   for (const c of activeChapters) {
@@ -188,5 +233,6 @@ export function buildFilmPlan(all: PlanMedia[], o: PlanOptions): FilmPlan {
     finaleStartSeconds: Math.max(0, Number((totalSeconds - song).toFixed(3))),
     photoCount: photoTotal,
     skippedUndated,
+    colorGrade: o.colorGrade,
   };
 }

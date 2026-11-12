@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { validateSkill } from "../cinema/skill";
 import { buildFilmPlan, CLOSING_LINES, OPENING_LINES, type FilmPlan } from "../film/plan";
 import { defaultFinaleSeconds } from "../film/melody";
 import { birthdayInYear, parseYMD } from "../lib/dates";
@@ -98,10 +99,15 @@ export type FilmData = {
 /** Build the plan for a slideshow film from current media + studio overrides. */
 export async function filmData(db: DB, child: Child, film: Film): Promise<FilmData> {
   if (film.source !== "slideshow") throw new HttpError(400, "not_slideshow", "This film is an imported video.");
+  const skillRow = film.skillVersionId
+    ? (await db.select().from(schema.cinemaSkillVersions).where(eq(schema.cinemaSkillVersions.id, film.skillVersionId)).limit(1))[0]
+    : undefined;
+  const skill = skillRow ? validateSkill(skillRow.manifest) : null;
+  const manifest = skill?.ok ? skill.skill : null;
   const items = await db
     .select()
     .from(schema.media)
-    .where(and(eq(schema.media.childId, child.id), isNull(schema.media.deletedAt), eq(schema.media.kind, "image")));
+    .where(and(eq(schema.media.childId, child.id), isNull(schema.media.deletedAt), inArray(schema.media.kind, ["image", "video"])));
   const scenes = await db.select().from(schema.filmScenes).where(eq(schema.filmScenes.filmId, film.id));
   const override = new Map(scenes.filter((s) => s.mediaId).map((s) => [s.mediaId!, s]));
 
@@ -151,7 +157,14 @@ export async function filmData(db: DB, child: Child, film: Film): Promise<FilmDa
       songSeconds: audio?.durationMs ? audio.durationMs / 1000 : defaultFinaleSeconds(),
       openingLines: film.openingTitle ?? OPENING_LINES,
       closingLines: film.closingTitle ?? CLOSING_LINES,
+      openingSeconds: manifest?.opening.seconds,
+      closingSeconds: manifest?.closing.seconds,
       coverMediaId: film.coverMediaId ?? child.coverMediaId,
+      chapters: manifest?.chapters,
+      excludeDuplicates: manifest?.selection.deduplicate ?? false,
+      includeVideos: manifest?.selection.includeVideoStills ?? false,
+      colorGrade: manifest?.color.grade,
+      manualOrder: !!manifest && scenes.some((s) => s.order != null),
     },
   );
   const used = new Set(plan.scenes.flatMap((s) => (s.type === "photo" ? [s.mediaId] : [])));

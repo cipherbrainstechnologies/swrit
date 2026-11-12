@@ -143,7 +143,7 @@ export function startWorker(opts: { concurrency?: number; pollMs?: number; name?
           const outcome = await failJob(db, job, f.code, f.message, { retryable: f.retryable });
           log("error", "job_failed", { jobId: job.id, type: job.jobType, code: f.code, outcome });
           if (job.jobType === "film.render" && outcome === "failed" && job.filmId) {
-            await db.update(schema.birthdayFilms).set({ status: "failed" }).where(eq(schema.birthdayFilms.id, job.filmId));
+            await db.update(schema.birthdayFilms).set({ status: "failed", cinemaPhase: "FAILED" }).where(eq(schema.birthdayFilms.id, job.filmId));
           }
         }
       } finally {
