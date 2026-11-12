@@ -1,0 +1,35 @@
+# Private family media: NEVER commit
+photos/
+media-inbox/
+private-inbox/
+*.heic
+*.HEIC
+
+# Local data (PGlite database, local object storage, exports)
+.data/
+exports/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Build / deps
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests
+playwright-report/
+test-results/
+tests/.tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Private build brief (describes the family; kept local only)
+DEAR_SWRITSINH_CLAUDE_CURSOR_BUILD_KIT/
+DEAR_SWRITSINH_CLAUDE_CURSOR_MASTER_PROMPT.md

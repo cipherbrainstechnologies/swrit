@@ -1,0 +1,69 @@
+{
+  "name": "dear-swritsinh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dear Swritsinh: a private, mobile-first childhood archive and birthday theatre.",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0",
+    "worker": "tsx src/worker/main.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "owner:bootstrap": "tsx scripts/bootstrap-owner.ts",
+    "media:import": "tsx scripts/import-legacy.ts",
+    "verify:storage": "tsx scripts/verify-storage.ts",
+    "export:heirloom": "tsx scripts/export-heirloom.ts",
+    "film:render": "tsx scripts/render-film.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "ffmpeg-static",
+      "esbuild",
+      "@ffprobe-installer/ffprobe"
+    ]
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.901.0",
+    "@aws-sdk/s3-request-presigner": "3.901.0",
+    "@electric-sql/pglite": "0.3.16",
+    "@ffprobe-installer/ffprobe": "2.1.2",
+    "better-auth": "1.3.34",
+    "drizzle-orm": "0.44.7",
+    "exifr": "7.1.3",
+    "ffmpeg-static": "5.2.0",
+    "file-type": "19.6.0",
+    "next": "15.5.29",
+    "postgres": "3.4.9",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "sharp": "0.34.5",
+    "yauzl": "3.2.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.1",
+    "@playwright/test": "1.55.1",
+    "@tailwindcss/postcss": "4.1.18",
+    "@types/node": "22.18.0",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@types/yauzl": "2.10.3",
+    "drizzle-kit": "0.31.5",
+    "eslint": "9.37.0",
+    "eslint-config-next": "15.5.29",
+    "tailwindcss": "4.1.18",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

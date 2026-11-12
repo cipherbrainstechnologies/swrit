@@ -1,0 +1,16 @@
+photos
+media-inbox
+private-inbox
+.data
+exports
+.env
+.env.*
+!.env.example
+node_modules
+.next
+.git
+playwright-report
+test-results
+tests/.tmp
+DEAR_SWRITSINH_CLAUDE_CURSOR_BUILD_KIT
+DEAR_SWRITSINH_CLAUDE_CURSOR_MASTER_PROMPT.md
