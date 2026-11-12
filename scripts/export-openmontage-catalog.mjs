@@ -69,6 +69,30 @@ const profiles = [...read(path.join(root, "lib", "media_profiles.py")).matchAll(
   height: Number(m[3]),
 }));
 
+const skillTitle = (text) => {
+  const line = text.split("\n").find((row) => row.startsWith("# "));
+  if (!line) return "";
+  return line.replace(/^#\s+/, "").replace(/\s*[—–-].*$/, "").trim();
+};
+
+const skillDirs = ["skills/creative", "skills/pipelines"].filter((rel) => fs.existsSync(path.join(root, rel)));
+const creativeSkills = skillDirs
+  .flatMap((rel) =>
+    fs
+      .readdirSync(path.join(root, rel))
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => {
+        const slug = name.replace(/\.md$/, "");
+        const text = read(path.join(root, rel, name));
+        return {
+          slug,
+          title: skillTitle(text) || slug,
+          group: rel.includes("pipelines") ? "pipeline" : "creative",
+        };
+      }),
+  )
+  .sort((a, b) => a.title.localeCompare(b.title));
+
 const commit = process.env.OPENMONTAGE_COMMIT || "";
 const catalog = {
   commit,
@@ -77,9 +101,10 @@ const catalog = {
   pipelines,
   profiles,
   providers: providerHits.sort((a, b) => a.tool.localeCompare(b.tool)),
+  creativeSkills,
 };
 
 const out = path.join(process.cwd(), "src", "studio", "upstream-catalog.json");
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, JSON.stringify(catalog, null, 2));
-console.log(`pipelines=${pipelines.length} providers=${providerHits.length} profiles=${profiles.length}`);
+console.log(`pipelines=${pipelines.length} providers=${providerHits.length} profiles=${profiles.length} creativeSkills=${creativeSkills.length}`);

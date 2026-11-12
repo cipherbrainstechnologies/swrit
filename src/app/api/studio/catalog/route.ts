@@ -1,6 +1,6 @@
 import { json, requireOwner } from "@/server/access";
 import { route } from "@/server/http";
-import { declaredProviders, OPENMONTAGE_COMMIT, outputProfiles, pipelineCatalog, productionTemplates } from "@/studio/catalog";
+import { declaredProviders, OPENMONTAGE_COMMIT, outputProfiles, pipelineCatalog, productionTemplates, upstreamCreativeSkills, videoRecipeOptions } from "@/studio/catalog";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,6 +14,8 @@ export const GET = route(async (req) => {
     pipelines: pipelineCatalog(),
     profiles: outputProfiles(),
     templates: productionTemplates(),
+    recipes: videoRecipeOptions(),
+    creativeSkills: upstreamCreativeSkills(),
     providers: declaredProviders().map((provider) => ({
       provider: provider.provider,
       capability: provider.capabilities,

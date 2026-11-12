@@ -19,7 +19,7 @@ export function SkillForm() {
 
   return (
     <form className="space-y-3" onSubmit={submit}>
-      <textarea className="min-h-48 w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3" value={body} onChange={(event) => setBody(event.target.value)} placeholder="Paste a .skill.json object or a SKILL.md file" />
+      <textarea className="field min-h-48" value={body} onChange={(event) => setBody(event.target.value)} placeholder="Paste a .skill.json object or a SKILL.md file" />
       <button className="btn btn-gold" type="submit">Check and save draft</button>
       {notice ? <p className="text-sm text-slate">{notice}</p> : null}
     </form>

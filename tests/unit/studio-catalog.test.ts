@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findPipeline, findProfile, pipelineCatalog, suggestPipeline } from "../../src/studio/catalog";
+import { findPipeline, findProfile, pipelineCatalog, suggestPipeline, upstreamCreativeSkills, videoRecipeOptions } from "../../src/studio/catalog";
 import { buildScenes, runtimeFor, type PlannedAsset } from "../../src/studio/plan";
 
 describe("openmontage catalog", () => {
@@ -13,6 +13,13 @@ describe("openmontage catalog", () => {
     expect(findPipeline("cinematic")?.sourceLed).toBe(true);
     expect(findProfile("instagram_reels")).toMatchObject({ width: 1080, height: 1920 });
     expect(findProfile("instagram_portrait")).toBeNull();
+  });
+
+  it("seeds OpenMontage video skills into recipe options", () => {
+    expect(upstreamCreativeSkills().length).toBeGreaterThan(10);
+    const recipes = videoRecipeOptions();
+    expect(recipes.some((row) => row.kind === "skill" && row.title.includes("Cinematic"))).toBe(true);
+    expect(recipes.some((row) => row.kind === "template")).toBe(true);
   });
 
   it("does not send a family prompt to the stock documentary pipeline", () => {
