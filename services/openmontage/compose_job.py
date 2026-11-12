@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -18,7 +17,10 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001 — surface the import failure to the worker
         print(json.dumps({"success": False, "error": f"OpenMontage import failed: {exc}"}))
         return 1
-    browser_executable = job.get("remotion_browser_executable") or os.environ.get("REMOTION_BROWSER_EXECUTABLE")
+    # Use Remotion's pinned chrome-headless-shell from `npx remotion browser ensure` unless the
+    # job explicitly overrides. Do not fall back to REMOTION_BROWSER_EXECUTABLE — distro Chromium
+    # often SIGTRAPs in containers (see remotion.dev/docs/miscellaneous/chrome-headless-shell).
+    browser_executable = job.get("remotion_browser_executable")
     payload: dict = {
         "operation": "render",
         "edit_decisions": job["edit_decisions"],

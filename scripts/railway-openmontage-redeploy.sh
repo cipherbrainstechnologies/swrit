@@ -21,8 +21,8 @@ railway redeploy -y
 
 echo ""
 echo "After the build finishes, verify Chromium inside the running container:"
-echo "  railway ssh -- test -x /usr/bin/chromium && printenv REMOTION_BROWSER_EXECUTABLE"
-echo "Expected: /usr/bin/chromium"
+echo "  railway ssh -- 'ls /opt/openmontage/remotion-composer/node_modules/.remotion/chrome-headless-shell/linux64/*/chrome-headless-shell'"
+echo "Expected: chrome-headless-shell binary present"
 echo ""
 echo "Optional: confirm the worker claims studio.render:"
 echo "  railway ssh -- printenv WORKER_JOB_TYPES"
