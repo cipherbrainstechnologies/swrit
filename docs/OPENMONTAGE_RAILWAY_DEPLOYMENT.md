@@ -5,6 +5,7 @@ Do not add OpenMontage to the website image or the existing photo worker. Add on
 | Setting | Value |
 |---|---|
 | Dockerfile | `Dockerfile.openmontage` |
+| Config-as-code | `railway.openmontage.json` (Settings → Config-as-code on this service) |
 | Start | `node --import tsx src/worker/main.ts` (the image default) |
 | Public domain | none |
 | Replicas | 1 |
@@ -29,3 +30,22 @@ The image installs FFmpeg, Python 3, Chromium (for Remotion via `REMOTION_BROWSE
 The web service’s existing pre-deploy `pnpm db:migrate` applies `drizzle/0002_studio.sql`.
 
 No new provider key is required for a source-led film.
+
+## Redeploy after a Remotion or worker change
+
+From your laptop (Railway CLI logged in, project linked):
+
+```bash
+railway login
+railway link          # dear-swritsinh / production
+railway service       # pick the OpenMontage worker (not `worker` / not `web`)
+bash scripts/railway-openmontage-redeploy.sh
+```
+
+Verify inside the running container:
+
+```bash
+railway ssh -- test -x /usr/bin/chromium && printenv REMOTION_BROWSER_EXECUTABLE WORKER_JOB_TYPES
+```
+
+`web` redeploys on its own when `main` updates (`railway.web.json`). Only this service must be rebuilt for AI Studio Remotion renders.
