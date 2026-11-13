@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findPipeline, findProfile, pipelineCatalog, suggestPipeline, upstreamCreativeSkills, videoRecipeOptions } from "../../src/studio/catalog";
-import { remotionHeadlessShellPath } from "../../src/studio/run";
+import { remotionHeadlessShellPath, renderBudgetMs } from "../../src/studio/run";
 import { buildEditDecisions, buildScenes, deliveryCheck, runtimeFor, type PlannedAsset } from "../../src/studio/plan";
 
 describe("openmontage catalog", () => {
@@ -14,6 +14,12 @@ describe("openmontage catalog", () => {
     expect(findPipeline("cinematic")?.sourceLed).toBe(true);
     expect(findProfile("instagram_reels")).toMatchObject({ width: 1080, height: 1920 });
     expect(findProfile("instagram_portrait")).toBeNull();
+  });
+
+  it("gives a long photo film more than the old 30 minute render cap", () => {
+    expect(renderBudgetMs(8, 38)).toBeGreaterThanOrEqual(45 * 60 * 1000);
+    expect(renderBudgetMs(176, 710)).toBeGreaterThan(50 * 60 * 1000);
+    expect(renderBudgetMs(176, 710)).toBeLessThanOrEqual(3 * 60 * 60 * 1000);
   });
 
   it("resolves the Remotion headless shell path under the OpenMontage root", () => {

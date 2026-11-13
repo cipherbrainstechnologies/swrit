@@ -34,6 +34,10 @@ def main() -> int:
     }
     if browser_executable:
         payload["remotion_browser_executable"] = str(browser_executable)
+    if job.get("remotion_timeout_ms"):
+        payload["remotion_timeout_ms"] = int(job["remotion_timeout_ms"])
+    if job.get("remotion_concurrency"):
+        payload["remotion_concurrency"] = int(job["remotion_concurrency"])
     tool = VideoCompose()
     result = tool.execute(payload)
     data = getattr(result, "data", None)
