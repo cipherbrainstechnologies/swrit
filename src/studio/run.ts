@@ -7,9 +7,11 @@ import { and, eq, inArray } from "drizzle-orm";
 import sharp from "sharp";
 import { schema, type DB } from "@/server/db";
 import { env } from "@/server/env";
-import { ffprobe, type Probe } from "@/server/media/ffmpeg";
+import { ffmpegPath, ffprobe, frameRate, run as runProcess, type Probe } from "@/server/media/ffmpeg";
+import { setProgress } from "@/server/jobs/queue";
 import type { Storage } from "@/server/storage";
-import { buildEditDecisions, buildProposal, type PlannedAsset } from "./plan";
+import { findProfile } from "./catalog";
+import { buildEditDecisions, buildProposal, buildScenes, deliveryCheck, type PlannedAsset } from "./plan";
 
 /** Pinned chrome-headless-shell from `npx remotion browser ensure` in Dockerfile.openmontage. */
 export function remotionHeadlessShellPath(openmontageRoot: string): string {
@@ -26,9 +28,58 @@ export function remotionHeadlessShellPath(openmontageRoot: string): string {
   );
 }
 
-async function setStage(db: DB, projectId: string, runId: string, stage: string) {
+async function setStage(db: DB, projectId: string, runId: string, stage: string, progress?: number, jobId?: string | null) {
   await db.update(schema.studioProjects).set({ stage, updatedAt: new Date(), errorMessage: null }).where(eq(schema.studioProjects.id, projectId));
   await db.update(schema.studioPipelineRuns).set({ stage, updatedAt: new Date() }).where(eq(schema.studioPipelineRuns.id, runId));
+  if (jobId && progress !== undefined) await setProgress(db, jobId, progress);
+}
+
+async function stageStill(source: string, dest: string, width: number, height: number) {
+  const fitted = await sharp(source).rotate().resize(width, height, { fit: "inside" }).toBuffer();
+  const background = await sharp(source).rotate().resize(width, height, { fit: "cover" }).blur(28).modulate({ brightness: 0.55 }).toBuffer();
+  await sharp(background)
+    .composite([{ input: fitted, gravity: "centre" }])
+    .modulate({ saturation: 1.08 })
+    .gamma(1.03)
+    .jpeg({ quality: 90 })
+    .toFile(dest);
+}
+
+async function stageVideo(source: string, dest: string, width: number, height: number) {
+  const probed = await ffprobe(source);
+  const hasAudio = probed.streams.some((stream) => stream.codec_type === "audio");
+  await runProcess(ffmpegPath(), [
+    "-y", "-i", source,
+    "-vf", `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=black`,
+    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+    ...(hasAudio ? ["-c:a", "aac"] : ["-an"]),
+    "-movflags", "+faststart",
+    dest,
+  ], { timeoutMs: 10 * 60 * 1000 });
+}
+
+async function blackOutsideTitles(file: string, duration: number): Promise<string | null> {
+  try {
+    const { stderr } = await runProcess(ffmpegPath(), ["-i", file, "-vf", "blackdetect=d=0.8:pix_th=0.05", "-an", "-f", "null", "-"], { timeoutMs: 180_000 });
+    const stray = [...stderr.matchAll(/black_start:([\d.]+) black_end:([\d.]+)/g)].some((match) => {
+      const start = Number(match[1]);
+      const end = Number(match[2]);
+      return end > 3.6 && start < duration - 4;
+    });
+    return stray ? "A black stretch sits outside the opening and closing titles." : null;
+  } catch {
+    return "FFmpeg could not scan the file for blank frames.";
+  }
+}
+
+async function meanVolume(file: string): Promise<number | null> {
+  try {
+    const { stderr } = await runProcess(ffmpegPath(), ["-i", file, "-af", "volumedetect", "-f", "null", "-"], { timeoutMs: 120_000 });
+    const match = stderr.match(/mean_volume:\s*(-?[\d.]+)\s*dB/);
+    return match ? Number(match[1]) : null;
+  } catch {
+    return null;
+  }
 }
 
 function runPython(script: string, jobFile: string, signal: AbortSignal): Promise<{ code: number; stdout: string; stderr: string }> {
@@ -71,7 +122,10 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
   if (!project.approvedAt) throw Object.assign(new Error("The scene plan was not approved."), { code: "not_approved", retryable: false });
   const work = await fs.promises.mkdtemp(path.join(os.tmpdir(), "om-"));
   try {
-    await setStage(db, project.id, run.id, "ASSET_PREPARATION");
+    const profile = findProfile(exp.profile);
+    const frameWidth = profile?.width ?? 1920;
+    const frameHeight = profile?.height ?? 1080;
+    await setStage(db, project.id, run.id, "ASSET_PREPARATION", 0.15, run.jobId);
     const assetRows = await db.select().from(schema.studioProjectAssets).where(eq(schema.studioProjectAssets.projectId, project.id));
     const active = assetRows.filter((row) => !row.omitted).sort((a, b) => a.position - b.position);
     if (!active.length) throw Object.assign(new Error("Every shot is omitted."), { code: "no_media", retryable: false });
@@ -88,11 +142,11 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
       if (!media || media.deletedAt) throw Object.assign(new Error("A selected file is no longer in the library."), { code: "media_missing", retryable: false });
       const ext = media.kind === "video" ? ".mp4" : ".jpg";
       const dest = path.join(work, `${row.position.toString().padStart(4, "0")}-${row.mediaId}${ext}`);
-      const temp = `${dest}.download`;
+      const temp = `${dest}.source`;
       await pipeline(await storage.getStream(media.storageKey), fs.createWriteStream(temp));
-      if (media.kind === "image") await sharp(temp).rotate().jpeg({ quality: 90 }).toFile(dest);
-      else await fs.promises.rename(temp, dest);
-      if (media.kind === "image") await fs.promises.rm(temp, { force: true });
+      if (media.kind === "image") await stageStill(temp, dest, frameWidth, frameHeight);
+      else await stageVideo(temp, dest, frameWidth, frameHeight);
+      await fs.promises.rm(temp, { force: true });
       paths.set(media.id, dest);
       planned.push({
         id: row.id,
@@ -112,9 +166,9 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
       audioPath = path.join(work, "soundtrack");
       await pipeline(await storage.getStream(music.storageKey), fs.createWriteStream(audioPath));
     }
-    const planRow = await db.select().from(schema.studioScenePlans).where(eq(schema.studioScenePlans.projectId, project.id));
-    const latest = planRow.at(-1)?.plan as { scenes?: Parameters<typeof buildEditDecisions>[0]["scenes"] } | undefined;
-    const scenes = latest?.scenes ?? [];
+    const scenes = buildScenes(planned, project.title);
+    await db.insert(schema.studioScenePlans).values({ projectId: project.id, plan: { version: "1.0", scenes } });
+    await setStage(db, project.id, run.id, "TIMELINE", 0.4, run.jobId);
     const decisions = buildEditDecisions({
       scenes,
       assets: planned,
@@ -122,8 +176,15 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
       renderRuntime: project.renderRuntime === "ffmpeg" ? "ffmpeg" : "remotion",
       rendererFamily: project.rendererFamily,
       profile: exp.profile,
-      musicId: project.musicMediaId,
     });
+    const { missing, ...edit } = decisions;
+    const mediaCuts = (edit.cuts as { source?: string }[]).filter((cut) => cut.source).length;
+    if (missing.length || mediaCuts !== planned.length) {
+      throw Object.assign(new Error(`The timeline is missing ${planned.length - mediaCuts} of ${planned.length} selected shots. The render stopped instead of delivering the title cards alone.`), {
+        code: "incomplete_timeline",
+        retryable: false,
+      });
+    }
     const manifest = {
       version: "1.0",
       assets: [
@@ -132,13 +193,10 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
           type: asset.kind,
           path: paths.get(asset.mediaId),
           source_tool: "library",
-          scene_id: `scene-${asset.id}`,
+          scene_id: `scene-${asset.mediaId}`,
           provider: "private-library",
           license: "owner",
         })),
-        ...(project.musicMediaId && audioPath
-          ? [{ id: `music-${project.musicMediaId}`, type: "music", path: audioPath, source_tool: "library", scene_id: "soundtrack", provider: "private-library", license: "owner" }]
-          : []),
       ],
     };
     const proposal = buildProposal({
@@ -146,7 +204,7 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
       prompt: project.prompt,
       pipeline: project.pipeline,
       profile: exp.profile,
-      renderRuntime: decisions.render_runtime,
+      renderRuntime: edit.render_runtime,
       rendererFamily: project.rendererFamily,
       assetCount: planned.length,
       undated: planned.filter((asset) => asset.dateNeedsReview).length,
@@ -172,16 +230,15 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         openmontage_root: root,
         output_path: output,
         profile: exp.profile,
-        edit_decisions: decisions,
+        edit_decisions: edit,
         asset_manifest: manifest,
         proposal_packet: proposal,
         scene_plan: scenes,
-        audio_path: audioPath,
         remotion_browser_executable: remotionBrowser,
       }),
     );
     if (signal.aborted) throw Object.assign(new Error("Cancelled"), { code: "cancelled", retryable: false });
-    await setStage(db, project.id, run.id, "RENDERING");
+    await setStage(db, project.id, run.id, "RENDERING", 0.55, run.jobId);
     const script = path.join(process.cwd(), "services", "openmontage", "compose_job.py");
     const result = await runPython(script, jobFile, signal);
     const parsed = parseResult(result.stdout);
@@ -191,7 +248,22 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         retryable: false,
       });
     }
-    await setStage(db, project.id, run.id, "QUALITY_REVIEW");
+    if (audioPath) {
+      await setStage(db, project.id, run.id, "AUDIO_MIX", 0.75, run.jobId);
+      const mixed = path.join(work, "mixed.mp4");
+      const probed = await ffprobe(output);
+      const videoSeconds = Number(probed.format.duration ?? 0);
+      const fadeOut = Math.max(0, videoSeconds - 2);
+      await runProcess(ffmpegPath(), [
+        "-y", "-i", output, "-i", audioPath,
+        "-filter_complex", `[1:a]afade=t=in:st=0:d=1,afade=t=out:st=${fadeOut}:d=2,loudnorm=I=-16:TP=-1.5:LRA=11[a]`,
+        "-map", "0:v:0", "-map", "[a]",
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
+        mixed,
+      ], { timeoutMs: 10 * 60 * 1000 });
+      await fs.promises.rename(mixed, output);
+    }
+    await setStage(db, project.id, run.id, "QUALITY_REVIEW", 0.85, run.jobId);
     const probe = await ffprobe(output);
     const video = probe.streams.find((stream) => stream.codec_type === "video");
     const audio = probe.streams.find((stream) => stream.codec_type === "audio");
@@ -199,10 +271,29 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
     if (!video || !video.width || !video.height || duration < 1) {
       throw Object.assign(new Error("FFprobe did not find a playable video stream."), { code: "probe_failed", retryable: false });
     }
-    if (project.musicMediaId && !audio) {
-      throw Object.assign(new Error("The soundtrack was required and the file has no audio stream."), { code: "missing_audio", retryable: false });
+    const volume = audio ? await meanVolume(output) : null;
+    const expectedSeconds = scenes.at(-1)?.end_seconds ?? 0;
+    const problem = deliveryCheck({
+      expectedSeconds,
+      actualSeconds: duration,
+      width: video.width,
+      height: video.height,
+      profileWidth: frameWidth,
+      profileHeight: frameHeight,
+      mediaCuts,
+      expectedShots: planned.length,
+      musicRequired: Boolean(project.musicMediaId),
+      meanVolumeDb: volume,
+    });
+    if (problem) throw Object.assign(new Error(problem), { code: "quality_failed", retryable: false });
+    const fps = frameRate(video.avg_frame_rate);
+    if (fps && (fps < 23 || fps > 31)) {
+      throw Object.assign(new Error(`The file is ${fps.toFixed(2)} fps. The profile expects about 24 or 30.`), { code: "quality_failed", retryable: false });
     }
-    await setStage(db, project.id, run.id, "UPLOADING");
+    await runProcess(ffmpegPath(), ["-v", "error", "-i", output, "-f", "null", "-"], { timeoutMs: 180_000 });
+    const black = await blackOutsideTitles(output, duration);
+    if (black) throw Object.assign(new Error(black), { code: "quality_failed", retryable: false });
+    await setStage(db, project.id, run.id, "UPLOADING", 0.93, run.jobId);
     const key = `studio/${project.childId}/${project.id}/${exp.id}.mp4`;
     await storage.putFile(key, output, "video/mp4");
     const head = await storage.head(key);
@@ -215,7 +306,14 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         durationSeconds: duration,
         width: video.width,
         height: video.height,
-        probe: { ...summary(probe), finalReview: parsed.data?.final_review_status ?? null },
+        probe: {
+          ...summary(probe),
+          finalReview: parsed.data?.final_review_status ?? null,
+          expectedSeconds,
+          mediaCuts,
+          meanVolumeDb: volume,
+          soundtrack: project.musicMediaId ? "present" : "intentionally-silent",
+        },
         errorMessage: null,
       })
       .where(eq(schema.studioExports.id, exp.id));

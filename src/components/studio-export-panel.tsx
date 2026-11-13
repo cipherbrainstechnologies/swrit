@@ -3,8 +3,10 @@
 const STAGE_PROGRESS: Record<string, number> = {
   PLANNING: 0.12,
   ASSET_PREPARATION: 0.38,
+  TIMELINE: 0.48,
   RENDERING: 0.62,
-  QUALITY_REVIEW: 0.82,
+  AUDIO_MIX: 0.74,
+  QUALITY_REVIEW: 0.86,
   UPLOADING: 0.94,
   COMPLETED: 1,
 };
@@ -12,8 +14,10 @@ const STAGE_PROGRESS: Record<string, number> = {
 const STAGE_LABEL: Record<string, string> = {
   PLANNING: "Planning the cut",
   ASSET_PREPARATION: "Staging library files",
-  RENDERING: "Rendering with OpenMontage",
-  QUALITY_REVIEW: "Checking the MP4",
+  TIMELINE: "Composing the timeline",
+  RENDERING: "Rendering pictures and titles",
+  AUDIO_MIX: "Mixing the soundtrack",
+  QUALITY_REVIEW: "Checking duration, picture, and sound",
   UPLOADING: "Saving to your private archive",
   COMPLETED: "Complete",
   FAILED: "Failed",
@@ -34,7 +38,7 @@ type ExportRow = {
 export function StudioExportPanel({ projectId, stage, exports: rows }: { projectId: string; stage: string; exports: ExportRow[] }) {
   const activeExport = rows.find((row) => row.status === "queued" || row.status === "processing");
   const ready = rows.filter((row) => row.status === "ready");
-  const running = ["PLANNING", "ASSET_PREPARATION", "RENDERING", "QUALITY_REVIEW", "UPLOADING"].includes(stage);
+  const running = ["PLANNING", "ASSET_PREPARATION", "TIMELINE", "RENDERING", "AUDIO_MIX", "QUALITY_REVIEW", "UPLOADING"].includes(stage);
   const pct = running ? Math.round((STAGE_PROGRESS[stage] ?? 0.2) * 100) : stage === "COMPLETED" ? 100 : 0;
   const label = STAGE_LABEL[stage] ?? stage.replaceAll("_", " ").toLowerCase();
 

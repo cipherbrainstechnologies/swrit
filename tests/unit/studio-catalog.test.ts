@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { findPipeline, findProfile, pipelineCatalog, suggestPipeline, upstreamCreativeSkills, videoRecipeOptions } from "../../src/studio/catalog";
 import { remotionHeadlessShellPath } from "../../src/studio/run";
-import { buildScenes, runtimeFor, type PlannedAsset } from "../../src/studio/plan";
+import { buildEditDecisions, buildScenes, deliveryCheck, runtimeFor, type PlannedAsset } from "../../src/studio/plan";
 
 describe("openmontage catalog", () => {
   it("reads the pinned pipelines instead of a handwritten list", () => {
@@ -47,5 +47,95 @@ describe("openmontage catalog", () => {
     expect(scenes[2].information_role).toMatch(/No caption/);
     expect(runtimeFor(assets).renderRuntime).toBe("remotion");
     expect(runtimeFor([{ ...assets[1], kind: "video" }]).renderRuntime).toBe("ffmpeg");
+  });
+
+  it("keeps every selected shot when an older plan used scene-1 ids", () => {
+    const assets: PlannedAsset[] = Array.from({ length: 8 }, (_, index) => ({
+      id: String(index + 1),
+      mediaId: `00000000-0000-4000-8000-00000000000${index + 1}`,
+      kind: "image" as const,
+      caption: null,
+      durationSeconds: 4,
+      hero: false,
+      dateNeedsReview: false,
+      position: index,
+    }));
+    const scenes = buildScenes(assets, "Cinematic Instagram Reel").map((scene) =>
+      scene.type === "broll" ? { ...scene, id: `scene-${assets.find((asset) => asset.mediaId === scene.mediaId)?.id}`, mediaId: undefined } : scene,
+    );
+    const paths = new Map(assets.map((asset) => [asset.mediaId, `/tmp/${asset.mediaId}.jpg`]));
+    const decisions = buildEditDecisions({
+      scenes,
+      assets,
+      paths,
+      renderRuntime: "remotion",
+      rendererFamily: "explainer-data",
+      profile: "instagram_reels",
+    });
+    expect(decisions.missing).toEqual([]);
+    expect(decisions.cuts.filter((cut) => cut.source).length).toBe(8);
+    expect(scenes.at(-1)?.end_seconds).toBe(38);
+  });
+
+  it("records a missing file instead of rendering the title cards alone", () => {
+    const asset: PlannedAsset = {
+      id: "row",
+      mediaId: "00000000-0000-4000-8000-000000000001",
+      kind: "image",
+      caption: null,
+      durationSeconds: 4,
+      hero: false,
+      dateNeedsReview: false,
+      position: 0,
+    };
+    const decisions = buildEditDecisions({
+      scenes: buildScenes([asset], "Title"),
+      assets: [asset],
+      paths: new Map(),
+      renderRuntime: "remotion",
+      rendererFamily: "explainer-data",
+      profile: "instagram_reels",
+    });
+    expect(decisions.missing).toHaveLength(1);
+    expect(decisions.cuts.filter((cut) => cut.source)).toHaveLength(0);
+  });
+
+  it("rejects a seven-second title card against a 38-second plan", () => {
+    expect(deliveryCheck({
+      expectedSeconds: 38,
+      actualSeconds: 7.062,
+      width: 1080,
+      height: 1920,
+      profileWidth: 1080,
+      profileHeight: 1920,
+      mediaCuts: 0,
+      expectedShots: 8,
+      musicRequired: false,
+      meanVolumeDb: -91,
+    })).toMatch(/were selected/);
+    expect(deliveryCheck({
+      expectedSeconds: 38,
+      actualSeconds: 38.4,
+      width: 1080,
+      height: 1920,
+      profileWidth: 1080,
+      profileHeight: 1920,
+      mediaCuts: 8,
+      expectedShots: 8,
+      musicRequired: true,
+      meanVolumeDb: -91,
+    })).toMatch(/silent/);
+    expect(deliveryCheck({
+      expectedSeconds: 38,
+      actualSeconds: 38.4,
+      width: 1080,
+      height: 1920,
+      profileWidth: 1080,
+      profileHeight: 1920,
+      mediaCuts: 8,
+      expectedShots: 8,
+      musicRequired: false,
+      meanVolumeDb: -91,
+    })).toBeNull();
   });
 });
