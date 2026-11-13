@@ -70,6 +70,7 @@ export function ProductionEditor({ initial }: { initial: Model }) {
   const [model, setModel] = useState(initial);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [postTo, setPostTo] = useState("");
   const [showAllShots, setShowAllShots] = useState(initial.assets.length <= 12 && !ACTIVE.has(initial.stage));
 
   const activeShots = useMemo(() => model.assets.filter((a) => !a.omitted), [model.assets]);
@@ -121,10 +122,10 @@ export function ProductionEditor({ initial }: { initial: Model }) {
     });
   }
 
-  async function act(path: string) {
+  async function act(path: string, payload: Record<string, string> = {}) {
     setBusy(true);
     setMessage("");
-    const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
     const body = await response.json().catch(() => ({}));
     setBusy(false);
     if (!response.ok) {
@@ -146,9 +147,20 @@ export function ProductionEditor({ initial }: { initial: Model }) {
         Approve scene plan
       </button>
     ) : model.stage === "PLANNING" || model.stage === "FAILED" || model.stage === "CANCELLED" ? (
-      <button className="btn btn-gold w-full sm:w-auto" type="button" disabled={busy} onClick={() => void act(`/api/studio/projects/${model.id}/render`)}>
-        {model.stage === "FAILED" ? "Try render again" : "Render with OpenMontage"}
-      </button>
+      <div className="flex w-full flex-col gap-2 sm:w-auto">
+        <label className="text-sm text-slate">
+          Where will you post this?
+          <select className="field mt-1" value={postTo} onChange={(event) => setPostTo(event.target.value)} required>
+            <option value="">Choose a platform</option>
+            <option value="instagram_reels">Instagram Reels</option>
+            <option value="youtube_shorts">YouTube Shorts</option>
+            <option value="tiktok">TikTok</option>
+          </select>
+        </label>
+        <button className="btn btn-gold w-full sm:w-auto" type="button" disabled={busy || !postTo} onClick={() => void act(`/api/studio/projects/${model.id}/render`, { profile: postTo })}>
+          {model.stage === "FAILED" ? "Try render again" : "Render"}
+        </button>
+      </div>
     ) : null;
 
   return (
