@@ -82,17 +82,43 @@ async function meanVolume(file: string): Promise<number | null> {
   }
 }
 
-function runPython(script: string, jobFile: string, signal: AbortSignal): Promise<{ code: number; stdout: string; stderr: string }> {
+/** Wall-clock budget for one Remotion render. OpenMontage itself allows max(10 min, 15s per scene). */
+export function renderBudgetMs(shotCount: number, expectedSeconds: number): number {
+  const scenes = Math.max(1, shotCount + 2);
+  const openMontageSeconds = Math.max(600, scenes * 15);
+  const byDuration = Math.ceil(Math.max(expectedSeconds, scenes * 4) * 6);
+  const seconds = Math.min(3 * 60 * 60, Math.max(45 * 60, openMontageSeconds + 180, byDuration));
+  return seconds * 1000;
+}
+
+function killProcessTree(child: ReturnType<typeof spawn>) {
+  if (process.platform !== "win32" && child.pid) {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+      return;
+    } catch {
+      /* The process group is already gone. */
+    }
+  }
+  child.kill("SIGKILL");
+}
+
+function runPython(script: string, jobFile: string, signal: AbortSignal, budgetMs: number): Promise<{ code: number; stdout: string; stderr: string }> {
   const python = process.env.OPENMONTAGE_PYTHON || (process.platform === "win32" ? "python" : "python3");
   return new Promise((resolve, reject) => {
-    const child = spawn(python, [script, jobFile], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(python, [script, jobFile], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+      detached: process.platform !== "win32",
+    });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      reject(new Error("OpenMontage render timed out"));
-    }, 30 * 60 * 1000);
-    const stop = () => child.kill("SIGKILL");
+      killProcessTree(child);
+      const minutes = Math.round(budgetMs / 60_000);
+      reject(new Error(`OpenMontage was still rendering after ${minutes} minutes, so the worker stopped it.`));
+    }, budgetMs);
+    const stop = () => killProcessTree(child);
     signal.addEventListener("abort", stop, { once: true });
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
@@ -211,6 +237,7 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
       durationSeconds: scenes.at(-1)?.end_seconds ?? 0,
       referenceUrl: project.referenceUrl,
     });
+    const budgetMs = renderBudgetMs(planned.length, scenes.at(-1)?.end_seconds ?? 0);
     const output = path.join(work, "master.mp4");
     const jobFile = path.join(work, "job.json");
     const remotionBrowser = remotionHeadlessShellPath(root);
@@ -235,12 +262,14 @@ export async function renderStudioJob(db: DB, storage: Storage, projectId: strin
         proposal_packet: proposal,
         scene_plan: scenes,
         remotion_browser_executable: remotionBrowser,
+        remotion_timeout_ms: Math.max(120_000, budgetMs - 90_000),
+        remotion_concurrency: 2,
       }),
     );
     if (signal.aborted) throw Object.assign(new Error("Cancelled"), { code: "cancelled", retryable: false });
     await setStage(db, project.id, run.id, "RENDERING", 0.55, run.jobId);
     const script = path.join(process.cwd(), "services", "openmontage", "compose_job.py");
-    const result = await runPython(script, jobFile, signal);
+    const result = await runPython(script, jobFile, signal, budgetMs);
     const parsed = parseResult(result.stdout);
     if (parsed.data?.final_review_status === "fail" || result.code !== 0 || !parsed.success) {
       throw Object.assign(new Error(parsed.error || result.stderr.slice(-500) || "OpenMontage render failed"), {
