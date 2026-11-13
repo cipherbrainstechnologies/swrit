@@ -54,6 +54,7 @@ export async function createStudioProject(
     acknowledgeLarge?: boolean;
     musicMediaId?: string;
     referenceUrl?: string;
+    shots?: { mediaId: string; caption?: string | null; durationSeconds?: number; hero?: boolean }[];
   },
 ) {
   const pipelineName = input.pipeline || suggestPipeline(input.prompt);
@@ -86,13 +87,27 @@ export async function createStudioProject(
     const music = await db.select().from(schema.media).where(and(eq(schema.media.id, input.musicMediaId), eq(schema.media.childId, child.id), isNull(schema.media.deletedAt))).limit(1);
     if (!music[0] || music[0].kind !== "audio") throw new HttpError(400, "bad_audio", "The soundtrack must be an audio file already in the library.");
   }
-  const planned: PlannedAsset[] = rows.map((row, index) => ({
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const ordered = input.shots?.length
+    ? input.shots.flatMap((shot) => {
+        const row = byId.get(shot.mediaId);
+        return row ? [{ row, shot }] : [];
+      })
+    : rows.map((row) => ({ row, shot: undefined }));
+  if (!ordered.length) throw new HttpError(400, "no_media", "No eligible photographs or videos were found.");
+  const planned: PlannedAsset[] = ordered.map(({ row, shot }, index) => ({
     id: `${index + 1}`,
     mediaId: row.id,
     kind: row.kind as PlannedAsset["kind"],
-    caption: row.caption,
-    durationSeconds: row.kind === "video" ? Math.min(Math.max((row.durationMs ?? 4000) / 1000, 1), 8) : row.favorite ? 6 : 4,
-    hero: row.favorite,
+    caption: shot?.caption !== undefined ? (shot.caption?.trim() ? shot.caption.trim().slice(0, 500) : null) : row.caption,
+    durationSeconds: shot?.durationSeconds
+      ? Math.min(Math.max(shot.durationSeconds, 1), 8)
+      : row.kind === "video"
+        ? Math.min(Math.max((row.durationMs ?? 4000) / 1000, 1), 8)
+        : row.favorite
+          ? 6
+          : 4,
+    hero: shot?.hero ?? row.favorite,
     dateNeedsReview: row.dateNeedsReview,
     position: index,
   }));
@@ -141,7 +156,7 @@ export async function createStudioProject(
   await db.insert(schema.studioDecisionLogs).values({
     projectId: project.id,
     category: "proposal",
-    summary: `Source-led ${pipeline.name} on ${profile.name}. Research and paid generation were not run.`,
+    summary: `Source-led ${pipeline.name} on ${profile.name}. Research, stock search and paid generation were not run.`,
   });
   await db.insert(schema.studioCostRecords).values({
     projectId: project.id,
