@@ -7,12 +7,15 @@ import { StudioExportPanel } from "@/components/studio-export-panel";
 type Asset = {
   id: string;
   mediaId: string;
+  kind: string;
   caption: string | null;
   durationSeconds: number;
   omitted: boolean;
   hero: boolean;
   position: number;
 };
+type Scene = { id: string; type: string; mediaId?: string; start_seconds: number; end_seconds: number };
+type AudioChoice = { id: string; filename: string };
 type ExportRow = { id: string; profile: string; status: string; width: number | null; height: number | null; durationSeconds: number | null; errorMessage: string | null };
 type Model = {
   id: string;
@@ -23,21 +26,26 @@ type Model = {
   stage: string;
   renderRuntime: string;
   errorMessage: string | null;
+  musicMediaId: string | null;
   proposal: unknown;
   assets: Asset[];
+  timeline: Scene[];
+  audio: AudioChoice[];
   exports: ExportRow[];
   decisions: string[];
 };
 
-const ACTIVE = new Set(["PLANNING", "ASSET_PREPARATION", "RENDERING", "QUALITY_REVIEW", "UPLOADING"]);
+const ACTIVE = new Set(["PLANNING", "ASSET_PREPARATION", "TIMELINE", "RENDERING", "AUDIO_MIX", "QUALITY_REVIEW", "UPLOADING"]);
 
 function stageTitle(stage: string) {
   const map: Record<string, string> = {
     AWAITING_APPROVAL: "Approve the plan",
     PLANNING: "Ready to render",
     ASSET_PREPARATION: "Staging files",
-    RENDERING: "Rendering",
-    QUALITY_REVIEW: "Quality check",
+    TIMELINE: "Composing the timeline",
+    RENDERING: "Rendering pictures and titles",
+    AUDIO_MIX: "Mixing the soundtrack",
+    QUALITY_REVIEW: "Checking the finished file",
     UPLOADING: "Saving MP4",
     COMPLETED: "Complete",
     FAILED: "Render failed",
@@ -82,7 +90,10 @@ export function ProductionEditor({ initial }: { initial: Model }) {
         ...current,
         stage: body.project.stage,
         errorMessage: body.project.errorMessage,
+        musicMediaId: body.project.musicMediaId,
         assets: body.assets,
+        timeline: body.timeline ?? current.timeline,
+        audio: body.audio ?? current.audio,
         exports: body.exports.map((row: ExportRow) => ({
           id: row.id,
           profile: row.profile,
@@ -124,6 +135,7 @@ export function ProductionEditor({ initial }: { initial: Model }) {
     else setModel((current) => ({ ...current, stage: "ASSET_PREPARATION" }));
   }
 
+  const timelineEnd = model.timeline.at(-1)?.end_seconds ?? totalSeconds;
   const shotsToShow = showAllShots ? activeShots : activeShots.slice(0, 6);
   const editingLocked = ACTIVE.has(model.stage) || model.stage === "COMPLETED";
   const profileLabel = model.profile.replaceAll("_", " ");
@@ -162,7 +174,7 @@ export function ProductionEditor({ initial }: { initial: Model }) {
           </div>
           <div className="rounded-xl bg-ivory-2 px-3 py-2">
             <dt className="text-xs text-slate">Length</dt>
-            <dd className="font-medium text-ink">{Math.floor(totalSeconds / 60)}m {totalSeconds % 60}s</dd>
+            <dd className="font-medium text-ink">{Math.round(timelineEnd)}s with titles</dd>
           </div>
           <div className="rounded-xl bg-ivory-2 px-3 py-2">
             <dt className="text-xs text-slate">Hero shots</dt>
@@ -194,6 +206,38 @@ export function ProductionEditor({ initial }: { initial: Model }) {
 
       {model.errorMessage ? <p className="card border-red-200 bg-red-50 p-4 text-sm text-red-800">{model.errorMessage}</p> : null}
 
+      <section className="card space-y-2 p-4 sm:p-6">
+        <h2 className="font-display text-xl text-ink">Soundtrack</h2>
+        <label className="block text-sm text-slate">
+          Library audio
+          <select
+            className="field mt-1"
+            value={model.musicMediaId ?? ""}
+            disabled={ACTIVE.has(model.stage)}
+            onChange={(event) => {
+              void fetch(`/api/studio/projects/${model.id}`, {
+                method: "PATCH",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ musicMediaId: event.target.value || null }),
+              }).then(async (response) => {
+                if (!response.ok) {
+                  const payload = await response.json().catch(() => ({}));
+                  setMessage(payload.message || "The soundtrack was not saved.");
+                  return;
+                }
+                const payload = await response.json();
+                setModel((current) => ({ ...current, musicMediaId: payload.project.musicMediaId, decisions: payload.decisions.map((row: { summary: string }) => row.summary) }));
+              });
+            }}
+          >
+            <option value="">Intentionally silent</option>
+            {model.audio.map((row) => <option key={row.id} value={row.id}>{row.filename}</option>)}
+          </select>
+        </label>
+        {model.audio.length === 0 ? <p className="text-sm text-slate">No audio file is in the library, so this film stays silent until you upload one.</p> : null}
+        <p className="text-sm text-slate">{model.musicMediaId ? "The selected file is mixed after the picture render, with a fade in, a fade out, and loudness normalization." : "No soundtrack is selected. The finished file will be marked intentionally silent."}</p>
+      </section>
+
       <StudioExportPanel projectId={model.id} stage={model.stage} exports={model.exports} />
 
       <section className="card space-y-3 p-4 sm:p-6">
@@ -211,12 +255,17 @@ export function ProductionEditor({ initial }: { initial: Model }) {
           ) : null}
         </div>
         <ol className="space-y-2">
-          {shotsToShow.map((asset, index) => (
+          {shotsToShow.map((asset, index) => {
+            const scene = model.timeline.find((row) => row.mediaId === asset.mediaId);
+            return (
             <li key={asset.id} className="rounded-2xl border border-ivory-2 bg-white/60 p-2 sm:p-3">
-              <div className="flex gap-2 sm:grid sm:grid-cols-[4rem_1fr_4.5rem_auto] sm:items-center sm:gap-3">
+              <p className="mb-2 text-[11px] uppercase tracking-wide text-slate">
+                {asset.kind} · {scene ? `${scene.start_seconds.toFixed(1)}s–${scene.end_seconds.toFixed(1)}s` : "omitted"} · fade · {asset.kind === "video" ? "original motion" : "Ken Burns"} · {model.musicMediaId ? "music under the shot" : "no music cue"}
+              </p>
+              <div className="flex gap-2 sm:grid sm:grid-cols-[4rem_1fr_4.5rem_auto_auto] sm:items-center sm:gap-3">
                 <div className="h-16 w-16 shrink-0 sm:h-[4.5rem] sm:w-[4.5rem]">
                   <MediaThumb
-                    m={{ id: asset.mediaId, kind: "image", status: "ready", favorite: false, dateNeedsReview: false, durationMs: null }}
+                    m={{ id: asset.mediaId, kind: asset.kind, status: "ready", favorite: false, dateNeedsReview: false, durationMs: null }}
                     label={asset.caption ?? `Shot ${index + 1}`}
                   />
                 </div>
@@ -247,9 +296,13 @@ export function ProductionEditor({ initial }: { initial: Model }) {
                   <input type="checkbox" defaultChecked={asset.hero} disabled={editingLocked} onChange={(event) => void save({ ...asset, hero: event.target.checked })} />
                   Hero
                 </label>
+                <button className="btn btn-ghost !min-h-9 text-xs" type="button" disabled={editingLocked || asset.hero} onClick={() => void fetch(`/api/studio/projects/${model.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ scenes: model.assets.map((row) => ({ ...row, hero: row.id === asset.id })) }) }).then(() => setModel((current) => ({ ...current, assets: current.assets.map((row) => ({ ...row, hero: row.id === asset.id })) })))}>
+                  {asset.hero ? "Opens the film" : "Open with this"}
+                </button>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
         {!showAllShots && activeShots.length > 6 ? (
           <p className="text-center text-sm text-slate">Showing 6 of {activeShots.length} shots.</p>

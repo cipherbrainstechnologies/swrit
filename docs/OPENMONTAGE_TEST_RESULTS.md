@@ -22,4 +22,4 @@ The same checkout's `score_slideshow_risk` scored a two-shot source-led plan at 
 - No worker interruption test against Railway.
 - Remotion was not installed on this machine.
 
-A production is not marked `COMPLETED` unless the MP4 is uploaded and FFprobe finds a video stream. A required soundtrack with no audio stream fails the job.
+The production named Cinematic Instagram Reel was marked complete with a 7.062 second 1080×1920 file. That file is the final export, not a preview. The stored scene plan still lists eight photographs through 38 seconds. The renderer looked up `scene-1` … `scene-8` against asset-row UUIDs, matched none, and kept only the two title cards plus Remotion's tail. The same skip marked other short exports complete. A file is no longer complete unless its duration matches the rebuilt timeline, every selected shot has a cut, and a selected soundtrack measures louder than silence.

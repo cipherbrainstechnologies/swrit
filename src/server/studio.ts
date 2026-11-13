@@ -9,7 +9,7 @@ import { compileSkillMarkdown, validateSkill } from "@/cinema/skill";
 import { findPipeline, findProfile, suggestPipeline } from "@/studio/catalog";
 import { buildProposal, buildScenes, runtimeFor, type PlannedAsset } from "@/studio/plan";
 
-const RUNNING = new Set(["ASSET_PREPARATION", "RENDERING", "QUALITY_REVIEW", "UPLOADING"]);
+const RUNNING = new Set(["ASSET_PREPARATION", "TIMELINE", "RENDERING", "AUDIO_MIX", "QUALITY_REVIEW", "UPLOADING"]);
 
 function assertPublicHttps(raw: string): string {
   let url: URL;
@@ -164,7 +164,54 @@ export async function getStudioProject(db: DB, childId: string, id: string) {
   const [brief] = await db.select().from(schema.studioProductionBriefs).where(eq(schema.studioProductionBriefs.projectId, id)).orderBy(desc(schema.studioProductionBriefs.createdAt)).limit(1);
   const exports_ = await db.select().from(schema.studioExports).where(eq(schema.studioExports.projectId, id)).orderBy(desc(schema.studioExports.createdAt));
   const decisions = await db.select().from(schema.studioDecisionLogs).where(eq(schema.studioDecisionLogs.projectId, id)).orderBy(asc(schema.studioDecisionLogs.createdAt));
-  return { project, assets, plan: plan?.plan ?? null, proposal: brief?.proposal ?? null, exports: exports_, decisions };
+  const mediaIds = assets.map((asset) => asset.mediaId);
+  const mediaRows = mediaIds.length
+    ? await db.select().from(schema.media).where(and(eq(schema.media.childId, childId), inArray(schema.media.id, mediaIds)))
+    : [];
+  const kinds = new Map(mediaRows.map((row) => [row.id, row.kind]));
+  const planned: PlannedAsset[] = assets.filter((asset) => !asset.omitted).map((asset) => ({
+    id: asset.id,
+    mediaId: asset.mediaId,
+    kind: (kinds.get(asset.mediaId) as PlannedAsset["kind"]) ?? "image",
+    caption: asset.caption,
+    durationSeconds: asset.durationSeconds,
+    hero: asset.hero,
+    dateNeedsReview: false,
+    position: asset.position,
+  }));
+  const audio = await db
+    .select({ id: schema.media.id, filename: schema.media.filenameOriginal })
+    .from(schema.media)
+    .where(and(eq(schema.media.childId, childId), eq(schema.media.kind, "audio"), isNull(schema.media.deletedAt)))
+    .limit(100);
+  return {
+    project,
+    assets: assets.map((asset) => ({ ...asset, kind: kinds.get(asset.mediaId) ?? "image" })),
+    plan: plan?.plan ?? null,
+    timeline: buildScenes(planned, project.title),
+    proposal: brief?.proposal ?? null,
+    exports: exports_,
+    decisions,
+    audio,
+  };
+}
+
+export async function setStudioMusic(db: DB, childId: string, id: string, musicMediaId: string | null) {
+  const current = await getStudioProject(db, childId, id);
+  if (RUNNING.has(current.project.stage)) throw new HttpError(409, "locked", "The soundtrack cannot change while a render is running.");
+  if (musicMediaId) {
+    const [music] = await db.select().from(schema.media).where(and(eq(schema.media.id, musicMediaId), eq(schema.media.childId, childId), isNull(schema.media.deletedAt))).limit(1);
+    if (!music || music.kind !== "audio") throw new HttpError(400, "bad_audio", "Choose an audio file already in the library.");
+  }
+  await db.update(schema.studioProjects).set({ musicMediaId, updatedAt: new Date() }).where(eq(schema.studioProjects.id, id));
+  await db.delete(schema.studioAudioAssets).where(eq(schema.studioAudioAssets.projectId, id));
+  if (musicMediaId) await db.insert(schema.studioAudioAssets).values({ projectId: id, mediaId: musicMediaId, role: "soundtrack" });
+  await db.insert(schema.studioDecisionLogs).values({
+    projectId: id,
+    category: "audio",
+    summary: musicMediaId ? "A library soundtrack will be mixed into the film." : "No soundtrack. The film is intentionally silent.",
+  });
+  return getStudioProject(db, childId, id);
 }
 
 export async function updateStudioScenes(
@@ -174,7 +221,9 @@ export async function updateStudioScenes(
   edits: { id: string; caption?: string; durationSeconds?: number; omitted?: boolean; hero?: boolean; position?: number }[],
 ) {
   const current = await getStudioProject(db, childId, id);
-  if (current.project.stage !== "AWAITING_APPROVAL") throw new HttpError(409, "locked", "The scene plan is locked after approval.");
+  if (RUNNING.has(current.project.stage) || current.project.stage === "COMPLETED") {
+    throw new HttpError(409, "locked", "The scene plan is locked while a render is running.");
+  }
   for (const edit of edits) {
     const row = current.assets.find((asset) => asset.id === edit.id);
     if (!row) continue;

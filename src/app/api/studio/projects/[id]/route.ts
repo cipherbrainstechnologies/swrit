@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { HttpError, json, requireOwner } from "@/server/access";
-import { deleteStudioExport, getStudioProject, updateStudioScenes } from "@/server/studio";
+import { deleteStudioExport, getStudioProject, setStudioMusic, updateStudioScenes } from "@/server/studio";
 import { assertUuid, readJson, route } from "@/server/http";
 import { getStorage } from "@/server/storage";
 
@@ -20,7 +20,8 @@ const patch = z.object({
     omitted: z.boolean().optional(),
     hero: z.boolean().optional(),
     position: z.number().int().min(0).max(20000).optional(),
-  })).max(20000),
+  })).max(20000).optional(),
+  musicMediaId: z.string().uuid().nullable().optional(),
 }).strict();
 
 export const DELETE = route<{ id: string }>(async (req, { id }) => {
@@ -34,5 +35,9 @@ export const DELETE = route<{ id: string }>(async (req, { id }) => {
 export const PATCH = route<{ id: string }>(async (req, { id }) => {
   const ctx = await requireOwner(req, { write: true });
   const input = patch.parse(await readJson(req, 1024 * 1024));
+  if (input.musicMediaId !== undefined) {
+    return json(await setStudioMusic(ctx.db, ctx.child.id, assertUuid(id), input.musicMediaId));
+  }
+  if (!input.scenes) throw new HttpError(400, "empty", "Nothing to update.");
   return json(await updateStudioScenes(ctx.db, ctx.child.id, assertUuid(id), input.scenes));
 });
