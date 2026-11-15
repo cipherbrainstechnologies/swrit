@@ -11,6 +11,7 @@ const items = [
   { href: "/app/birthday/5", label: "5th Birthday" },
   { href: "/app/cinema", label: "Cinema" },
   { href: "/app/ai-studio", label: "AI Studio" },
+  { href: "/app/ai-studio/reels", label: "Reels" },
   { href: "/app/settings", label: "Settings" },
 ];
 

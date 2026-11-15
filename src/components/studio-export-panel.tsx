@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 const STAGE_PROGRESS: Record<string, number> = {
   PLANNING: 0.12,
   ASSET_PREPARATION: 0.38,
@@ -36,8 +38,22 @@ type ExportRow = {
 };
 
 export function StudioExportPanel({ projectId, stage, exports: rows }: { projectId: string; stage: string; exports: ExportRow[] }) {
-  const activeExport = rows.find((row) => row.status === "queued" || row.status === "processing");
-  const ready = rows.filter((row) => row.status === "ready");
+  const [localRows, setLocalRows] = useState(rows);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalRows(rows);
+  }, [rows]);
+  const activeExport = localRows.find((row) => row.status === "queued" || row.status === "processing");
+  const ready = localRows.filter((row) => row.status === "ready");
+
+  async function removeExport(exportId: string) {
+    if (!window.confirm("Delete this MP4 from storage and the database?")) return;
+    setBusyId(exportId);
+    const response = await fetch(`/api/studio/projects/${projectId}?export=${exportId}`, { method: "DELETE" });
+    setBusyId(null);
+    if (response.ok) setLocalRows((current) => current.filter((row) => row.id !== exportId));
+  }
   const running = ["PLANNING", "ASSET_PREPARATION", "TIMELINE", "RENDERING", "AUDIO_MIX", "QUALITY_REVIEW", "UPLOADING"].includes(stage);
   const pct = running ? Math.round((STAGE_PROGRESS[stage] ?? 0.2) * 100) : stage === "COMPLETED" ? 100 : 0;
   const label = STAGE_LABEL[stage] ?? stage.replaceAll("_", " ").toLowerCase();
@@ -80,10 +96,18 @@ export function StudioExportPanel({ projectId, stage, exports: rows }: { project
             <a className="btn btn-gold" href={`/api/studio/projects/${projectId}/playback?export=${row.id}`}>
               Play
             </a>
+            <button
+              type="button"
+              className="btn btn-ghost !min-h-9 text-sm text-red-800"
+              disabled={busyId === row.id}
+              onClick={() => void removeExport(row.id)}
+            >
+              {busyId === row.id ? "Deleting…" : "Delete"}
+            </button>
           </div>
         </div>
       ))}
-      {rows
+      {localRows
         .filter((row) => row.status === "failed")
         .slice(0, 1)
         .map((row) => (

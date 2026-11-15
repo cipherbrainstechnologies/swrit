@@ -23,6 +23,7 @@ export default async function AiStudioPage() {
         <p className="mt-2 text-sm text-slate">{upstreamCreativeSkills().length} video-making skills from that checkout are available under Recipe.</p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm">
           <Link href="/app/ai-studio/post" className="btn btn-gold">Ready to post</Link>
+          <Link href="/app/ai-studio/reels" className="btn btn-dark">Saved reels</Link>
           <Link href="/app/ai-studio/skills" className="btn">Skills</Link>
           <Link href="/app/ai-studio/providers" className="btn">Providers</Link>
         </div>
