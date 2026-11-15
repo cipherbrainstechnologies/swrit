@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePageOwner } from "@/server/access";
 import { listEditdnaPlans } from "@/server/editdna";
+import { FlowStepNav } from "../flow-step-nav";
 import { PlansDesk, type PlanRow } from "./plans-desk";
 
 export const dynamic = "force-dynamic";
@@ -19,15 +20,14 @@ export default async function EditdnaPlansPage() {
 
   return (
     <div className="space-y-8 py-8">
-      <Link href="/app/editdna" className="text-sm text-gold-deep hover:underline">
-        ← EditDNA
-      </Link>
-      <header>
-        <p className="eyebrow text-slate">Edit plans</p>
-        <h1 className="font-display mt-2 text-4xl">EDL vault</h1>
-        <p className="mt-2 max-w-2xl text-slate">
-          Intermediate edit decision lists for DaVinci Resolve. Download JSON and run{" "}
-          <code className="text-sm">editdna build plan.json --execute</code> on a machine with Resolve scripting enabled.
+      <FlowStepNav step="edl" />
+      <header className="space-y-2">
+        <p className="eyebrow text-slate">applier/ → plan_edit()</p>
+        <h1 className="font-display text-4xl">EDL (JSON)</h1>
+        <p className="max-w-2xl text-slate">
+          Output of <strong className="font-normal text-ink">your raw clips + script</strong> fed through the template. Pass this
+          file to <code className="text-sm">resolve_driver/resolve_bridge.py</code> via{" "}
+          <code className="text-sm">editdna build … --execute</code> while Resolve (Free) is running.
         </p>
       </header>
       <PlansDesk initial={initial} />
