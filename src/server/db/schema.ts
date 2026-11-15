@@ -678,6 +678,42 @@ export const studioDecisionLogs = pgTable("studio_decision_logs", {
   createdAt: createdAt(),
 });
 
+/** EditDNA style templates (schema v1 JSON from the EditDNA CLI). */
+export const editdnaTemplates = pgTable(
+  "editdna_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    sourceLabel: text("source_label"),
+    referenceMediaId: uuid("reference_media_id").references(() => media.id, { onDelete: "set null" }),
+    manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("editdna_templates_child_idx").on(t.childId, t.createdAt)],
+);
+
+/** EditDNA edit decision lists (EDL v1) ready for Resolve build. */
+export const editdnaPlans = pgTable(
+  "editdna_plans",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    childId: uuid("child_id")
+      .notNull()
+      .references(() => childProfiles.id, { onDelete: "cascade" }),
+    templateId: uuid("template_id").references(() => editdnaTemplates.id, { onDelete: "set null" }),
+    title: text("title").notNull(),
+    edl: jsonb("edl").$type<Record<string, unknown>>().notNull(),
+    notes: text("notes"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("editdna_plans_child_idx").on(t.childId, t.createdAt)],
+);
+
 export const studioPipelineRuns = pgTable("studio_pipeline_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id")

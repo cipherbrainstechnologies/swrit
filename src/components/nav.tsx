@@ -12,6 +12,7 @@ const items = [
   { href: "/app/cinema", label: "Cinema" },
   { href: "/app/ai-studio", label: "AI Studio" },
   { href: "/app/ai-studio/reels", label: "Reels" },
+  { href: "/app/editdna", label: "EditDNA" },
   { href: "/app/settings", label: "Settings" },
 ];
 
