@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePageOwner } from "@/server/access";
 import { listEditdnaTemplates } from "@/server/editdna";
+import { FlowStepNav } from "../flow-step-nav";
 import { TemplatesDesk, type TemplateRow } from "./templates-desk";
 
 export const dynamic = "force-dynamic";
@@ -18,15 +19,14 @@ export default async function EditdnaTemplatesPage() {
 
   return (
     <div className="space-y-8 py-8">
-      <Link href="/app/editdna" className="text-sm text-gold-deep hover:underline">
-        ← EditDNA
-      </Link>
-      <header>
-        <p className="eyebrow text-slate">Style templates</p>
-        <h1 className="font-display mt-2 text-4xl">Editing DNA vault</h1>
-        <p className="mt-2 max-w-2xl text-slate">
-          Versioned JSON artifacts: pacing, transitions, caption style, and music sync extracted from reference edits.
-          Share, edit by hand, and feed them into <code className="text-sm">editdna apply</code>.
+      <FlowStepNav step="template" />
+      <header className="space-y-2">
+        <p className="eyebrow text-slate">analyzer/ → analyze_style()</p>
+        <h1 className="font-display text-4xl">StyleTemplate (JSON)</h1>
+        <p className="max-w-2xl text-slate">
+          Output of the <strong className="font-normal text-ink">reference video</strong> column: pacing, transitions, captions,
+          and beat-sync. Import from <code className="text-sm">editdna analyze</code>, then hand into{" "}
+          <code className="text-sm">editdna apply</code> on the center column.
         </p>
       </header>
       <TemplatesDesk initial={initial} />
