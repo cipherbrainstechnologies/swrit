@@ -321,6 +321,42 @@ export async function deleteStudioExport(db: DB, childId: string, projectId: str
   return getStudioProject(db, childId, projectId);
 }
 
+export type StudioExportVaultRow = {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  pipeline: string;
+  profile: string;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  createdAt: Date;
+};
+
+/** Ready studio MP4s for the export vault (reels, shorts, and other profiles). */
+export async function listStudioExportVault(db: DB, childId: string, opts: { profile?: string; limit?: number } = {}) {
+  const limit = Math.min(Math.max(opts.limit ?? 80, 1), 200);
+  const conds = [eq(schema.studioProjects.childId, childId), eq(schema.studioExports.status, "ready")];
+  if (opts.profile) conds.push(eq(schema.studioExports.profile, opts.profile));
+  return db
+    .select({
+      id: schema.studioExports.id,
+      projectId: schema.studioExports.projectId,
+      projectTitle: schema.studioProjects.title,
+      pipeline: schema.studioProjects.pipeline,
+      profile: schema.studioExports.profile,
+      width: schema.studioExports.width,
+      height: schema.studioExports.height,
+      durationSeconds: schema.studioExports.durationSeconds,
+      createdAt: schema.studioExports.createdAt,
+    })
+    .from(schema.studioExports)
+    .innerJoin(schema.studioProjects, eq(schema.studioProjects.id, schema.studioExports.projectId))
+    .where(and(...conds))
+    .orderBy(desc(schema.studioExports.createdAt))
+    .limit(limit);
+}
+
 export async function cancelStudioProject(db: DB, childId: string, id: string) {
   const current = await getStudioProject(db, childId, id);
   if (current.project.stage === "COMPLETED") throw new HttpError(409, "locked", "A finished export stays until you delete that export.");
