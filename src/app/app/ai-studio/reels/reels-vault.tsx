@@ -61,7 +61,7 @@ export function ReelsVault({ initial }: { initial: VaultItem[] }) {
 
   const refresh = useCallback(async (profile?: string) => {
     const q = profile && profile !== "all" ? `?profile=${encodeURIComponent(profile)}` : "";
-    const response = await fetch(`/api/studio/exports${q}`);
+    const response = await fetch(`/api/studio/vault${q}`);
     if (!response.ok) return;
     const body = (await response.json()) as { items: VaultItem[] };
     setItems(body.items);
